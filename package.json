@@ -1,0 +1,9 @@
+{
+  "name": "iitc-plugin-driving-route",
+  "version": "0.1.0-dev",
+  "private": true,
+  "description": "IITC plugin scaffold for driving routes with portal detours",
+  "scripts": {
+    "build": "node build.js"
+  }
+}
