@@ -66,4 +66,5 @@
     html += '</div>';
 
     panel.innerHTML = html;
+    dr.enablePanelDragging(panel);
   };

@@ -16,6 +16,62 @@
     }
   };
 
+    dr.isDesktopLayout = function() {
+    return window.matchMedia &&
+      window.matchMedia('(min-width: 701px)').matches;
+  };
+
+  dr.enablePanelDragging = function(panel) {
+    var header = panel.querySelector('.driving-route-header');
+    if (!header) return;
+    if (header.dataset.dragEnabled === 'true') return;
+
+    header.dataset.dragEnabled = 'true';
+
+    var dragging = false;
+    var startX = 0;
+    var startY = 0;
+    var startLeft = 0;
+    var startTop = 0;
+
+    header.addEventListener('mousedown', function(ev) {
+      if (!dr.isDesktopLayout()) return;
+      if (ev.target.closest('button, a, input, select, textarea')) return;
+
+      dragging = true;
+      startX = ev.clientX;
+      startY = ev.clientY;
+
+      var rect = panel.getBoundingClientRect();
+      startLeft = rect.left;
+      startTop = rect.top;
+
+      panel.style.left = startLeft + 'px';
+      panel.style.top = startTop + 'px';
+      panel.style.right = 'auto';
+      panel.style.bottom = 'auto';
+
+      ev.preventDefault();
+    });
+
+    window.addEventListener('mousemove', function(ev) {
+      if (!dragging) return;
+
+      var newLeft = startLeft + ev.clientX - startX;
+      var newTop = startTop + ev.clientY - startY;
+
+      newLeft = Math.max(0, Math.min(window.innerWidth - panel.offsetWidth, newLeft));
+      newTop = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, newTop));
+
+      panel.style.left = newLeft + 'px';
+      panel.style.top = newTop + 'px';
+    });
+
+    window.addEventListener('mouseup', function() {
+      dragging = false;
+    });
+  };
+
   dr.createPanel = function() {
     if (document.getElementById('driving-route-panel')) return;
 
@@ -104,13 +160,13 @@
       dr.renderPanel();
       console.log('Driving Route: render ok');
 
-      // dr.redrawLabels();
-      // console.log('Driving Route: labels ok');
+      dr.redrawLabels();
+      console.log('Driving Route: labels ok');
 
-      // if (typeof window.addHook === 'function') {
-      //   window.addHook('portalDetailsUpdated', dr.injectPortalDetailsAction);
-      //   console.log('Driving Route: portal hook ok');
-      // }
+      if (typeof window.addHook === 'function') {
+        window.addHook('portalDetailsUpdated', dr.injectPortalDetailsAction);
+        console.log('Driving Route: portal hook ok');
+      }
 
       console.log('Driving Route setup complete');
     } catch (e) {

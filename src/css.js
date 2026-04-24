@@ -118,4 +118,55 @@
   font-weight: bold;
   border: 2px solid #111;
 }
+
+// mobile media
+@media (max-width: 700px) {
+  .driving-route-panel {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    width: auto;
+    max-height: 55vh;
+  }
+
+  .driving-route-header {
+    cursor: default;
+  }
+}
+
+// desktop media
+@media (min-width: 701px) {
+  .driving-route-panel {
+    right: 12px;
+    bottom: 12px;
+    width: 300px;
+    max-height: calc(100vh - 24px);
+
+    resize: both;
+    overflow: auto;
+    min-width: 240px;
+    min-height: 44px;
+    max-width: calc(100vw - 24px);
+  }
+
+  .driving-route-panel.driving-route-panel-collapsed {
+    height: auto !important;
+    min-height: 0;
+    resize: none;
+    overflow: hidden;
+  }
+
+  .driving-route-panel.driving-route-panel-collapsed .driving-route-body {
+    display: none;
+  }
+
+  .driving-route-panel.driving-route-panel-collapsed .driving-route-header {
+    border-bottom: 0;
+  }
+
+  .driving-route-header {
+    cursor: move;
+  }
+}
+
 `;
