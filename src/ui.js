@@ -86,14 +86,34 @@
   };
 
   dr.setup = function() {
-    dr.injectCss();
-    dr.loadState();
-    dr.createPanel();
-    dr.addToolboxLink();
-    dr.redrawLabels();
-    dr.renderPanel();
+    try {
+      console.log('Driving Route setup starting');
 
-    if (typeof window.addHook === 'function') {
-      window.addHook('portalDetailsUpdated', dr.injectPortalDetailsAction);
+      dr.injectCss();
+      console.log('Driving Route: css ok');
+
+      dr.loadState();
+      console.log('Driving Route: state ok');
+
+      dr.createPanel();
+      console.log('Driving Route: panel ok');
+
+      dr.addToolboxLink();
+      console.log('Driving Route: toolbox ok');
+
+      dr.renderPanel();
+      console.log('Driving Route: render ok');
+
+      // dr.redrawLabels();
+      // console.log('Driving Route: labels ok');
+
+      // if (typeof window.addHook === 'function') {
+      //   window.addHook('portalDetailsUpdated', dr.injectPortalDetailsAction);
+      //   console.log('Driving Route: portal hook ok');
+      // }
+
+      console.log('Driving Route setup complete');
+    } catch (e) {
+      console.error('Driving Route setup failed:', e);
     }
   };
