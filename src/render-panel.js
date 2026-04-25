@@ -16,25 +16,29 @@
     if (stops.length === 0) return dr.renderEmptyHelp();
 
     var html = '';
-    html += '<ol class="driving-route-stops">';
+    html += '<table class="driving-route-waypoints-table">';
+    html += '<tbody>';
+
     stops.forEach(function(stop, index) {
       var leg = legsByToIndex[index];
-      html += '<li class="driving-route-stop" data-index="' + index + '" draggable="true">';
-      html += '<div class="driving-route-stop-title"><span class="driving-route-stop-num">' + (index + 1) + '</span><span>' + dr.escapeHtml(stop.title) + '</span></div>';
+      var waitValue = dr.formatDurationInput(dr.getEffectiveStopMinutes(stop));
+
+      html += '<tr class="driving-route-waypoint-row" data-index="' + index + '">';
+      html += '<td class="driving-route-waypoint-num"><button type="button" class="driving-route-stop-num driving-route-waypoint-badge" title="Select and center portal" data-action="select-stop-center" data-index="' + index + '">' + (index + 1) + '</button></td>';
+      html += '<td class="driving-route-waypoint-name-cell"><button type="button" class="driving-route-waypoint-name" title="Select portal" data-action="select-stop" data-index="' + index + '">' + dr.escapeHtml(stop.title) + '</button>';
       if (leg) {
-        html += '<div class="driving-route-leg">Drive from previous: ' + dr.escapeHtml(leg.durationText || dr.formatDuration(leg.durationSeconds)) + ' · ' + dr.escapeHtml(leg.distanceText || dr.formatDistance(leg.distanceMeters)) + '</div>';
+        html += '<div class="driving-route-leg">' + dr.escapeHtml(leg.durationText || dr.formatDuration(leg.durationSeconds)) + ' · ' + dr.escapeHtml(leg.distanceText || dr.formatDistance(leg.distanceMeters)) + '</div>';
       }
-      html += '<div class="driving-route-stop-meta">Stop: ' + dr.getEffectiveStopMinutes(stop) + ' min</div>';
-
-      html += '<div class="driving-route-stop-actions">';
-      html += '<button type="button" class="driving-route-small-button" data-action="remove-stop" data-index="' + index + '">Remove</button>';
-      html += '<button type="button" class="driving-route-small-button" data-action="move-stop-up" data-index="' + index + '" ' + (index === 0 ? 'disabled' : '') + '>Up</button>';
-      html += '<button type="button" class="driving-route-small-button" data-action="move-stop-down" data-index="' + index + '" ' + (index === stops.length - 1 ? 'disabled' : '') + '>Dn</button>';
-      html += '</div>';
-
-      html += '</li>';
+      html += '</td>';
+      html += '<td class="driving-route-wait-cell"><input class="driving-route-wait-input" type="text" inputmode="decimal" value="' + dr.escapeHtml(waitValue) + '" title="Examples: 15m, 1.5h, 2d" data-field="stop-minutes" data-index="' + index + '"></td>';
+      html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Move up" data-action="move-stop-up" data-index="' + index + '" ' + (index === 0 ? 'disabled' : '') + '>&uarr;</button></td>';
+      html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Move down" data-action="move-stop-down" data-index="' + index + '" ' + (index === stops.length - 1 ? 'disabled' : '') + '>&darr;</button></td>';
+      html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Remove waypoint" data-action="remove-stop" data-index="' + index + '">X</button></td>';
+      html += '</tr>';
     });
-    html += '</ol>';
+
+    html += '</tbody>';
+    html += '</table>';
     return html;
   };
 
@@ -56,29 +60,20 @@
     var html = '';
 
     html += '<div class="driving-route-body">';
-    html += '<p>Mark portals as waypoints to prepare a driving route.</p>';
-    html += '<p class="driving-route-summary"><b>Waypoints:</b> ' + stops.length + '</p>';
+    html += dr.renderStopsList(legsByToIndex);
 
-    if (stops.length === 0) {
-      html += dr.renderEmptyHelp();
-    } else {
-      html += '<div class="driving-route-compact-list">';
-      stops.forEach(function(stop, index) {
-        html += '<div><span class="driving-route-stop-num">' + (index + 1) + '</span> ' + dr.escapeHtml(stop.title) + '</div>';
-      });
-      html += '</div>';
-    }
-
-    html += dr.renderTotals(dr.state.route);
-
-    html += '<label class="driving-route-setting">Stop time <input type="number" min="0" max="120" step="1" value="' + dr.escapeHtml(dr.state.settings.defaultStopMinutes) + '" data-field="default-stop-minutes"> min/portal</label>';
+    html += '<label class="driving-route-setting">Default stop time <input type="text" inputmode="decimal" value="' + dr.escapeHtml(dr.formatDurationInput(dr.state.settings.defaultStopMinutes)) + '" title="Examples: 15m, 1.5h, 2d" data-field="default-stop-minutes"> per portal</label>';
 
     html += '<div class="driving-route-actions">';
-    html += '<button type="button" data-action="calculate-route">Calculate</button>';
+    html += '<button type="button" data-action="add-selected-stop">Add</button>';
+    html += '<button type="button" data-action="calculate-route">Plot</button>';
     html += '<button type="button" data-action="open-google-maps">Open Maps</button>';
-    html += '<button type="button" data-action="open-edit">Edit waypoints</button>';
     html += '<button type="button" data-action="clear-route">Clear</button>';
+    html += '<button type="button" data-action="close-panel">Close</button>';
     html += '</div>';
+
+    html += '<div class="driving-route-bottom-summary"><b>Waypoints:</b> ' + stops.length + '</div>';
+    html += dr.renderTotals(dr.state.route);
 
     html += '<div class="driving-route-message" id="driving-route-message"></div>';
     html += '</div>';
@@ -86,18 +81,29 @@
   };
 
   dr.renderEditPanel = function(legsByToIndex) {
-    var html = '';
-    html += '<div class="driving-route-body">';
-    html += '<p>Change order or delete waypoints:</p>';
-    html += dr.renderStopsList(legsByToIndex);
-    html += '<div class="driving-route-actions driving-route-footer-actions">';
-    html += '<button type="button" data-action="open-main">&lt; Main menu</button>';
-    html += '<button type="button" data-action="clear-route">Clear all waypoints</button>';
-    html += '<button type="button" data-action="close-panel">Close</button>';
-    html += '</div>';
-    html += '<div class="driving-route-message" id="driving-route-message"></div>';
-    html += '</div>';
-    return html;
+    return dr.renderMainPanel(legsByToIndex);
+  };
+
+
+  dr.getDialogWidth = function() {
+    var viewportWidth = window.innerWidth || document.documentElement.clientWidth || 520;
+
+    if (viewportWidth <= 640) {
+      return Math.max(320, viewportWidth);
+    }
+
+    return Math.min(560, Math.max(460, viewportWidth - 40));
+  };
+
+  dr.isDialogOpen = function(content) {
+    if (!content || !window.jQuery) return false;
+
+    try {
+      var dialogContent = window.jQuery(content).closest('.ui-dialog-content');
+      return dialogContent.length > 0 && dialogContent.dialog('isOpen');
+    } catch (e) {
+      return false;
+    }
   };
 
   dr.renderPanel = function() {
@@ -114,17 +120,23 @@
       route.legs.forEach(function(leg) { legsByToIndex[leg.toIndex] = leg; });
     }
 
-    var title = dr.state.panelView === 'edit' ? 'Driving Route - Edit waypoints' : 'Driving Route';
-    var bodyHtml = dr.state.panelView === 'edit' ? dr.renderEditPanel(legsByToIndex) : dr.renderMainPanel(legsByToIndex);
-    var html = '<div id="' + dr.DOM_IDS.dialogContent + '" class="driving-route-dialog-content">' + bodyHtml + '</div>';
+    var contentHtml = dr.renderMainPanel(legsByToIndex);
+    var existingContent = document.getElementById(dr.DOM_IDS.dialogContent);
+
+    if (dr.isDialogOpen(existingContent)) {
+      existingContent.innerHTML = contentHtml;
+      return;
+    }
+
+    var html = '<div id="' + dr.DOM_IDS.dialogContent + '" class="driving-route-dialog-content">' + contentHtml + '</div>';
 
     if (typeof window.dialog === 'function') {
       window.dialog({
         id: dr.DOM_IDS.dialog,
-        title: title,
+        title: 'Driving Route',
         html: html,
         dialogClass: 'driving-route-dialog',
-        width: 'auto'
+        width: dr.getDialogWidth()
       });
     } else {
       console.log('Driving Route: IITC dialog API is unavailable.');

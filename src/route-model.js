@@ -54,6 +54,65 @@
     dr.renderPanel();
   };
 
+
+
+  dr.setStopMinutes = function(index, minutes) {
+    if (index < 0 || index >= dr.state.stops.length) return;
+    if (typeof minutes !== 'number' || !isFinite(minutes) || minutes < 0) return;
+
+    dr.state.stops[index].stopMinutes = Math.round(minutes);
+
+    if (dr.state.route && dr.state.route.legs) {
+      dr.state.route.totals = dr.calculateTotals(dr.state.route.legs);
+    }
+
+    dr.saveStops();
+    dr.renderPanel();
+  };
+
+  dr.parseDurationMinutes = function(text) {
+    var match = String(text == null ? '' : text).trim().toLowerCase().match(/^(\d+(?:\.\d+)?)\s*([mhd]?)$/);
+    if (!match) return null;
+
+    var value = Number(match[1]);
+    var unit = match[2] || 'm';
+
+    if (!isFinite(value) || value < 0) return null;
+
+    if (unit === 'm') return Math.round(value);
+    if (unit === 'h') return Math.round(value * 60);
+    if (unit === 'd') return Math.round(value * 24 * 60);
+
+    return null;
+  };
+
+  dr.formatDurationInput = function(minutes) {
+    minutes = Math.max(0, Math.round(Number(minutes || 0)));
+
+    if (minutes && minutes % 1440 === 0) return (minutes / 1440) + 'd';
+    if (minutes && minutes % 60 === 0) return (minutes / 60) + 'h';
+    return minutes + 'm';
+  };
+
+  dr.selectStopPortal = function(index, center) {
+    var stop = dr.state.stops[index];
+    if (!stop || !stop.guid) return;
+
+    var portal = window.portals && window.portals[stop.guid];
+    if (center && portal && portal.getLatLng && window.map) {
+      window.map.setView(portal.getLatLng(), window.map.getZoom());
+    }
+
+    if (typeof window.renderPortalDetails === 'function') {
+      window.renderPortalDetails(stop.guid);
+    } else {
+      window.selectedPortal = stop.guid;
+    }
+
+    dr.renderMiniControl();
+  };
+
+
   dr.calculateTotals = function(legs) {
     var driveSeconds = 0;
     var distanceMeters = 0;

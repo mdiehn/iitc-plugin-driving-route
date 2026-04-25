@@ -48,18 +48,18 @@ function wrapper(plugin_info) {
 }
 
 .driving-route-body p {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 }
 
 .driving-route-summary {
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .driving-route-setting {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 12px 0 10px;
+  gap: 5px;
+  margin: 8px 0 8px;
 }
 
 .driving-route-setting input {
@@ -67,35 +67,99 @@ function wrapper(plugin_info) {
 }
 
 .driving-route-empty {
-  margin: 8px 0 12px;
-}
-
-.driving-route-compact-list {
   margin: 8px 0 10px;
 }
 
-.driving-route-compact-list div {
-  margin: 4px 0;
+.driving-route-waypoints-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 6px 0 8px;
+  border: 0;
 }
 
-.driving-route-stops {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.driving-route-waypoints-table tr,
+.driving-route-waypoints-table td {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
 }
 
-.driving-route-stop {
-  margin: 6px 0;
-  padding: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(0, 0, 0, 0.18);
+.driving-route-waypoints-table td {
+  padding: 2px 2px;
+  vertical-align: middle;
 }
 
-.driving-route-stop-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.driving-route-waypoint-num {
+  width: 22px;
+  text-align: center;
+}
+
+.driving-route-waypoint-name-cell {
+  width: auto;
+  min-width: 0;
+}
+
+.driving-route-wait-cell {
+  width: 44px;
+  text-align: center;
+}
+
+.driving-route-row-action {
+  width: 23px;
+  text-align: center;
+}
+
+.driving-route-waypoint-name {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: inherit !important;
+  text-align: left;
   font-weight: bold;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.driving-route-waypoint-name:hover,
+.driving-route-waypoint-name:focus,
+.driving-route-waypoint-name:active {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: inherit !important;
+}
+
+.driving-route-wait-input {
+  width: 42px;
+  padding: 1px 2px;
+}
+
+.driving-route-row-button {
+  width: 21px;
+  min-width: 21px;
+  padding: 1px 0;
+  border: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+  text-align: center;
+  line-height: 1.2;
+  font-size: 14px !important;
+  font-weight: bold !important;
+}
+
+.driving-route-row-button:disabled {
+  opacity: 0.35;
 }
 
 .driving-route-stop-num,
@@ -103,37 +167,47 @@ function wrapper(plugin_info) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.4em;
-  height: 1.4em;
-  padding: 0 0.3em;
-  border-radius: 0.7em;
+  width: 16px;
+  min-width: 16px;
+  height: 16px;
+  min-height: 16px;
+  padding: 0;
+  border-radius: 50%;
   background: #ffd800;
   color: #111;
   font-weight: bold;
-  font-size: 0.85em;
+  font-size: 10px;
+  line-height: 16px;
 }
 
-.driving-route-leg,
-.driving-route-stop-meta {
-  margin-top: 5px;
-  opacity: 0.9;
+button.driving-route-stop-num,
+button.driving-route-waypoint-badge {
+  width: 16px !important;
+  min-width: 16px !important;
+  height: 16px !important;
+  min-height: 16px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: #ffd800 !important;
+  color: #111 !important;
+  cursor: pointer;
+  line-height: 16px !important;
+}
+
+.driving-route-leg {
+  margin-top: 1px;
+  opacity: 0.85;
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .driving-route-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
-}
-
-.driving-route-small-button:disabled {
-  opacity: 0.45;
-}
-
-.driving-route-stop-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 6px;
+  gap: 5px;
   margin-top: 8px;
 }
 
@@ -144,15 +218,20 @@ function wrapper(plugin_info) {
   padding-top: 7px;
 }
 
+.driving-route-bottom-summary {
+  margin-top: 8px;
+  opacity: 0.9;
+}
+
 .driving-route-totals {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .driving-route-totals div {
-  padding: 6px;
+  padding: 5px;
   background: rgba(0, 0, 0, 0.18);
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
@@ -164,8 +243,8 @@ function wrapper(plugin_info) {
 
 .driving-route-message {
   display: none;
-  margin-top: 10px;
-  padding: 8px;
+  margin-top: 8px;
+  padding: 7px;
   border: 1px solid #ffd800;
   background: rgba(0, 0, 0, 0.22);
 }
@@ -198,6 +277,57 @@ function wrapper(plugin_info) {
 
 .driving-route-portal-action {
   margin-top: 8px;
+}
+
+
+.ui-dialog.driving-route-dialog {
+  max-width: calc(100vw - 20px) !important;
+}
+
+.ui-dialog.driving-route-dialog .ui-dialog-content {
+  overflow-x: hidden !important;
+}
+
+.driving-route-waypoints-table,
+.driving-route-waypoints-table tbody,
+.driving-route-waypoints-table tr,
+.driving-route-waypoints-table td,
+.driving-route-waypoint-name-cell,
+.driving-route-waypoint-name-cell * {
+  border-color: transparent !important;
+}
+
+.driving-route-waypoint-name,
+button.driving-route-waypoint-name,
+.ui-dialog .driving-route-waypoint-name,
+.ui-dialog button.driving-route-waypoint-name {
+  border: none !important;
+  border-width: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-image: none !important;
+}
+
+@media (max-width: 640px) {
+  .ui-dialog.driving-route-dialog {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    top: auto !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    max-height: calc(68dvh - env(safe-area-inset-bottom, 0px));
+  }
+
+  .ui-dialog.driving-route-dialog .ui-dialog-content {
+    width: 100% !important;
+    max-height: calc(68dvh - 40px - env(safe-area-inset-bottom, 0px)) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+  }
 }
 `;
 
@@ -394,6 +524,65 @@ function wrapper(plugin_info) {
     dr.redrawLabels();
     dr.renderPanel();
   };
+
+
+
+  dr.setStopMinutes = function(index, minutes) {
+    if (index < 0 || index >= dr.state.stops.length) return;
+    if (typeof minutes !== 'number' || !isFinite(minutes) || minutes < 0) return;
+
+    dr.state.stops[index].stopMinutes = Math.round(minutes);
+
+    if (dr.state.route && dr.state.route.legs) {
+      dr.state.route.totals = dr.calculateTotals(dr.state.route.legs);
+    }
+
+    dr.saveStops();
+    dr.renderPanel();
+  };
+
+  dr.parseDurationMinutes = function(text) {
+    var match = String(text == null ? '' : text).trim().toLowerCase().match(/^(\d+(?:\.\d+)?)\s*([mhd]?)$/);
+    if (!match) return null;
+
+    var value = Number(match[1]);
+    var unit = match[2] || 'm';
+
+    if (!isFinite(value) || value < 0) return null;
+
+    if (unit === 'm') return Math.round(value);
+    if (unit === 'h') return Math.round(value * 60);
+    if (unit === 'd') return Math.round(value * 24 * 60);
+
+    return null;
+  };
+
+  dr.formatDurationInput = function(minutes) {
+    minutes = Math.max(0, Math.round(Number(minutes || 0)));
+
+    if (minutes && minutes % 1440 === 0) return (minutes / 1440) + 'd';
+    if (minutes && minutes % 60 === 0) return (minutes / 60) + 'h';
+    return minutes + 'm';
+  };
+
+  dr.selectStopPortal = function(index, center) {
+    var stop = dr.state.stops[index];
+    if (!stop || !stop.guid) return;
+
+    var portal = window.portals && window.portals[stop.guid];
+    if (center && portal && portal.getLatLng && window.map) {
+      window.map.setView(portal.getLatLng(), window.map.getZoom());
+    }
+
+    if (typeof window.renderPortalDetails === 'function') {
+      window.renderPortalDetails(stop.guid);
+    } else {
+      window.selectedPortal = stop.guid;
+    }
+
+    dr.renderMiniControl();
+  };
+
 
   dr.calculateTotals = function(legs) {
     var driveSeconds = 0;
@@ -592,25 +781,29 @@ function wrapper(plugin_info) {
     if (stops.length === 0) return dr.renderEmptyHelp();
 
     var html = '';
-    html += '<ol class="driving-route-stops">';
+    html += '<table class="driving-route-waypoints-table">';
+    html += '<tbody>';
+
     stops.forEach(function(stop, index) {
       var leg = legsByToIndex[index];
-      html += '<li class="driving-route-stop" data-index="' + index + '" draggable="true">';
-      html += '<div class="driving-route-stop-title"><span class="driving-route-stop-num">' + (index + 1) + '</span><span>' + dr.escapeHtml(stop.title) + '</span></div>';
+      var waitValue = dr.formatDurationInput(dr.getEffectiveStopMinutes(stop));
+
+      html += '<tr class="driving-route-waypoint-row" data-index="' + index + '">';
+      html += '<td class="driving-route-waypoint-num"><button type="button" class="driving-route-stop-num driving-route-waypoint-badge" title="Select and center portal" data-action="select-stop-center" data-index="' + index + '">' + (index + 1) + '</button></td>';
+      html += '<td class="driving-route-waypoint-name-cell"><button type="button" class="driving-route-waypoint-name" title="Select portal" data-action="select-stop" data-index="' + index + '">' + dr.escapeHtml(stop.title) + '</button>';
       if (leg) {
-        html += '<div class="driving-route-leg">Drive from previous: ' + dr.escapeHtml(leg.durationText || dr.formatDuration(leg.durationSeconds)) + ' · ' + dr.escapeHtml(leg.distanceText || dr.formatDistance(leg.distanceMeters)) + '</div>';
+        html += '<div class="driving-route-leg">' + dr.escapeHtml(leg.durationText || dr.formatDuration(leg.durationSeconds)) + ' · ' + dr.escapeHtml(leg.distanceText || dr.formatDistance(leg.distanceMeters)) + '</div>';
       }
-      html += '<div class="driving-route-stop-meta">Stop: ' + dr.getEffectiveStopMinutes(stop) + ' min</div>';
-
-      html += '<div class="driving-route-stop-actions">';
-      html += '<button type="button" class="driving-route-small-button" data-action="remove-stop" data-index="' + index + '">Remove</button>';
-      html += '<button type="button" class="driving-route-small-button" data-action="move-stop-up" data-index="' + index + '" ' + (index === 0 ? 'disabled' : '') + '>Up</button>';
-      html += '<button type="button" class="driving-route-small-button" data-action="move-stop-down" data-index="' + index + '" ' + (index === stops.length - 1 ? 'disabled' : '') + '>Dn</button>';
-      html += '</div>';
-
-      html += '</li>';
+      html += '</td>';
+      html += '<td class="driving-route-wait-cell"><input class="driving-route-wait-input" type="text" inputmode="decimal" value="' + dr.escapeHtml(waitValue) + '" title="Examples: 15m, 1.5h, 2d" data-field="stop-minutes" data-index="' + index + '"></td>';
+      html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Move up" data-action="move-stop-up" data-index="' + index + '" ' + (index === 0 ? 'disabled' : '') + '>&uarr;</button></td>';
+      html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Move down" data-action="move-stop-down" data-index="' + index + '" ' + (index === stops.length - 1 ? 'disabled' : '') + '>&darr;</button></td>';
+      html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Remove waypoint" data-action="remove-stop" data-index="' + index + '">X</button></td>';
+      html += '</tr>';
     });
-    html += '</ol>';
+
+    html += '</tbody>';
+    html += '</table>';
     return html;
   };
 
@@ -632,29 +825,20 @@ function wrapper(plugin_info) {
     var html = '';
 
     html += '<div class="driving-route-body">';
-    html += '<p>Mark portals as waypoints to prepare a driving route.</p>';
-    html += '<p class="driving-route-summary"><b>Waypoints:</b> ' + stops.length + '</p>';
+    html += dr.renderStopsList(legsByToIndex);
 
-    if (stops.length === 0) {
-      html += dr.renderEmptyHelp();
-    } else {
-      html += '<div class="driving-route-compact-list">';
-      stops.forEach(function(stop, index) {
-        html += '<div><span class="driving-route-stop-num">' + (index + 1) + '</span> ' + dr.escapeHtml(stop.title) + '</div>';
-      });
-      html += '</div>';
-    }
-
-    html += dr.renderTotals(dr.state.route);
-
-    html += '<label class="driving-route-setting">Stop time <input type="number" min="0" max="120" step="1" value="' + dr.escapeHtml(dr.state.settings.defaultStopMinutes) + '" data-field="default-stop-minutes"> min/portal</label>';
+    html += '<label class="driving-route-setting">Default stop time <input type="text" inputmode="decimal" value="' + dr.escapeHtml(dr.formatDurationInput(dr.state.settings.defaultStopMinutes)) + '" title="Examples: 15m, 1.5h, 2d" data-field="default-stop-minutes"> per portal</label>';
 
     html += '<div class="driving-route-actions">';
-    html += '<button type="button" data-action="calculate-route">Calculate</button>';
+    html += '<button type="button" data-action="add-selected-stop">Add</button>';
+    html += '<button type="button" data-action="calculate-route">Plot</button>';
     html += '<button type="button" data-action="open-google-maps">Open Maps</button>';
-    html += '<button type="button" data-action="open-edit">Edit waypoints</button>';
     html += '<button type="button" data-action="clear-route">Clear</button>';
+    html += '<button type="button" data-action="close-panel">Close</button>';
     html += '</div>';
+
+    html += '<div class="driving-route-bottom-summary"><b>Waypoints:</b> ' + stops.length + '</div>';
+    html += dr.renderTotals(dr.state.route);
 
     html += '<div class="driving-route-message" id="driving-route-message"></div>';
     html += '</div>';
@@ -662,18 +846,29 @@ function wrapper(plugin_info) {
   };
 
   dr.renderEditPanel = function(legsByToIndex) {
-    var html = '';
-    html += '<div class="driving-route-body">';
-    html += '<p>Change order or delete waypoints:</p>';
-    html += dr.renderStopsList(legsByToIndex);
-    html += '<div class="driving-route-actions driving-route-footer-actions">';
-    html += '<button type="button" data-action="open-main">&lt; Main menu</button>';
-    html += '<button type="button" data-action="clear-route">Clear all waypoints</button>';
-    html += '<button type="button" data-action="close-panel">Close</button>';
-    html += '</div>';
-    html += '<div class="driving-route-message" id="driving-route-message"></div>';
-    html += '</div>';
-    return html;
+    return dr.renderMainPanel(legsByToIndex);
+  };
+
+
+  dr.getDialogWidth = function() {
+    var viewportWidth = window.innerWidth || document.documentElement.clientWidth || 520;
+
+    if (viewportWidth <= 640) {
+      return Math.max(320, viewportWidth);
+    }
+
+    return Math.min(560, Math.max(460, viewportWidth - 40));
+  };
+
+  dr.isDialogOpen = function(content) {
+    if (!content || !window.jQuery) return false;
+
+    try {
+      var dialogContent = window.jQuery(content).closest('.ui-dialog-content');
+      return dialogContent.length > 0 && dialogContent.dialog('isOpen');
+    } catch (e) {
+      return false;
+    }
   };
 
   dr.renderPanel = function() {
@@ -690,17 +885,23 @@ function wrapper(plugin_info) {
       route.legs.forEach(function(leg) { legsByToIndex[leg.toIndex] = leg; });
     }
 
-    var title = dr.state.panelView === 'edit' ? 'Driving Route - Edit waypoints' : 'Driving Route';
-    var bodyHtml = dr.state.panelView === 'edit' ? dr.renderEditPanel(legsByToIndex) : dr.renderMainPanel(legsByToIndex);
-    var html = '<div id="' + dr.DOM_IDS.dialogContent + '" class="driving-route-dialog-content">' + bodyHtml + '</div>';
+    var contentHtml = dr.renderMainPanel(legsByToIndex);
+    var existingContent = document.getElementById(dr.DOM_IDS.dialogContent);
+
+    if (dr.isDialogOpen(existingContent)) {
+      existingContent.innerHTML = contentHtml;
+      return;
+    }
+
+    var html = '<div id="' + dr.DOM_IDS.dialogContent + '" class="driving-route-dialog-content">' + contentHtml + '</div>';
 
     if (typeof window.dialog === 'function') {
       window.dialog({
         id: dr.DOM_IDS.dialog,
-        title: title,
+        title: 'Driving Route',
         html: html,
         dialogClass: 'driving-route-dialog',
-        width: 'auto'
+        width: dr.getDialogWidth()
       });
     } else {
       console.log('Driving Route: IITC dialog API is unavailable.');
@@ -765,11 +966,9 @@ function wrapper(plugin_info) {
   dr.selectedStopIndex = function() {
     var guid = window.selectedPortal;
     if (!guid) return -1;
-
     for (var i = 0; i < dr.state.stops.length; i++) {
       if (dr.state.stops[i].guid === guid) return i;
     }
-
     return -1;
   };
 
@@ -779,7 +978,6 @@ function wrapper(plugin_info) {
       dr.showMessage('Selected portal is not in the route.');
       return;
     }
-
     dr.removeStop(index);
   };
 
@@ -801,7 +999,6 @@ function wrapper(plugin_info) {
         // Fall through to hiding the content if the IITC dialog wrapper is unavailable.
       }
     }
-
     if (content) content.style.display = 'none';
   };
 
@@ -812,7 +1009,7 @@ function wrapper(plugin_info) {
       dr.savePanelOpen();
       dr.renderPanel();
     } else if (action === 'open-edit') {
-      dr.state.panelView = 'edit';
+      dr.state.panelView = 'main';
       dr.state.panelOpen = true;
       dr.savePanelOpen();
       dr.renderPanel();
@@ -822,12 +1019,18 @@ function wrapper(plugin_info) {
       dr.closeDialog();
     } else if (action === 'toggle-selected-stop') {
       dr.toggleSelectedPortalStop();
+    } else if (action === 'add-selected-stop') {
+      dr.addSelectedPortal();
     } else if (action === 'move-stop-up') {
       dr.moveStop(Number(target.getAttribute('data-index')), Number(target.getAttribute('data-index')) - 1);
     } else if (action === 'move-stop-down') {
       dr.moveStop(Number(target.getAttribute('data-index')), Number(target.getAttribute('data-index')) + 1);
     } else if (action === 'remove-stop') {
       dr.removeStop(Number(target.getAttribute('data-index')));
+    } else if (action === 'select-stop') {
+      dr.selectStopPortal(Number(target.getAttribute('data-index')), false);
+    } else if (action === 'select-stop-center') {
+      dr.selectStopPortal(Number(target.getAttribute('data-index')), true);
     } else if (action === 'calculate-route') {
       dr.calculateRoute();
     } else if (action === 'open-google-maps') {
@@ -843,39 +1046,23 @@ function wrapper(plugin_info) {
 
     var DrivingRouteControl = L.Control.extend({
       options: { position: 'topleft' },
-
       onAdd: function() {
-        var container = L.DomUtil.create(
-          'div',
-          'leaflet-bar leaflet-control driving-route-mini-control iitc-plugin-driving-route-control'
-        );
-
+        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control driving-route-mini-control iitc-plugin-driving-route-control');
         container.id = dr.DOM_IDS.miniControl;
-
         L.DomEvent.disableClickPropagation(container);
         L.DomEvent.disableScrollPropagation(container);
-
         container.addEventListener('click', function(ev) {
           var button = ev.target.closest('[data-action]');
           if (!button) return;
-
           ev.preventDefault();
           dr.handleAction(button.getAttribute('data-action'), button);
         });
-
         return container;
       }
     });
 
     dr.state.miniControl = new DrivingRouteControl();
     window.map.addControl(dr.state.miniControl);
-  };
-
-  dr.removeMiniControl = function() {
-    if (!window.map || !dr.state.miniControl) return;
-
-    window.map.removeControl(dr.state.miniControl);
-    dr.state.miniControl = null;
   };
 
   dr.renderMiniControl = function() {
@@ -890,8 +1077,9 @@ function wrapper(plugin_info) {
 
     container.innerHTML = '' +
       '<a href="#" title="Open route in Google Maps" data-action="open-google-maps">M</a>' +
+      '<a href="#" title="Plot/replot route on map" data-action="calculate-route">P</a>' +
       '<a href="#" class="driving-route-mini-add' + addRemoveClass + '" title="' + addRemoveTitle + '" data-action="toggle-selected-stop">' + addRemoveText + '</a>' +
-      '<a href="#" title="Edit waypoints" data-action="open-edit">' + dr.state.stops.length + '</a>' +
+      '<a href="#" title="Open Driving Route menu" data-action="open-main">' + dr.state.stops.length + '</a>' +
       '<a href="#" title="Driving Route menu" data-action="open-main">=</a>';
   };
 
@@ -962,15 +1150,29 @@ function wrapper(plugin_info) {
 
       var target = ev.target;
       if (target && target.getAttribute('data-field') === 'default-stop-minutes') {
-        var value = Math.max(0, Number(target.value || 0));
+        var value = dr.parseDurationMinutes(target.value);
+        if (value === null) {
+          dr.showMessage('Invalid duration. Use values like 15m, 1.5h, or 2d.');
+          target.value = dr.formatDurationInput(dr.state.settings.defaultStopMinutes);
+          return;
+        }
+
         dr.state.settings.defaultStopMinutes = value;
         dr.saveSettings();
-
         if (dr.state.route && dr.state.route.legs) {
           dr.state.route.totals = dr.calculateTotals(dr.state.route.legs);
         }
-
         dr.renderPanel();
+      } else if (target && target.getAttribute('data-field') === 'stop-minutes') {
+        var stopIndex = Number(target.getAttribute('data-index'));
+        var stopValue = dr.parseDurationMinutes(target.value);
+        if (stopValue === null) {
+          dr.showMessage('Invalid duration. Use values like 15m, 1.5h, or 2d.');
+          target.value = dr.formatDurationInput(dr.getEffectiveStopMinutes(dr.state.stops[stopIndex]));
+          return;
+        }
+
+        dr.setStopMinutes(stopIndex, stopValue);
       }
     });
   };
@@ -997,15 +1199,14 @@ function wrapper(plugin_info) {
 
   dr.injectCss = function() {
     if (document.getElementById(dr.DOM_IDS.css)) return;
-
     var style = document.createElement('style');
     style.id = dr.DOM_IDS.css;
     style.textContent = dr.CSS;
     document.head.appendChild(style);
   };
 
+
   dr.setupLayerControl = function() {
-    if (!window.L || !window.map) return;
     if (dr.layerGroup) return;
 
     dr.layerGroup = L.layerGroup();
@@ -1014,8 +1215,6 @@ function wrapper(plugin_info) {
       window.addLayerGroup('Driving Route', dr.layerGroup, true);
     } else if (window.layerChooser && typeof window.layerChooser.addOverlay === 'function') {
       window.layerChooser.addOverlay(dr.layerGroup, 'Driving Route');
-      dr.layerGroup.addTo(window.map);
-    } else {
       dr.layerGroup.addTo(window.map);
     }
   };
@@ -1037,54 +1236,18 @@ function wrapper(plugin_info) {
     dr.layerEventsRegistered = true;
   };
 
-  dr.isLayerEnabled = function() {
-    if (!window.map || !dr.layerGroup) return true;
-    return window.map.hasLayer(dr.layerGroup);
-  };
-
-  dr.enable = function() {
-    dr.state.enabled = true;
-
-    dr.createMiniControl();
-    dr.renderMiniControl();
-
-    if (typeof dr.redrawLabels === 'function') {
-      dr.redrawLabels();
-    }
-  };
-
-  dr.disable = function() {
-    dr.state.enabled = false;
-
-    dr.removeMiniControl();
-    dr.closeDialog();
-
-    if (typeof dr.clearLabels === 'function') {
-      dr.clearLabels();
-    } else if (typeof dr.redrawLabels === 'function') {
-      dr.redrawLabels();
-    }
-  };
-
   dr.setup = function() {
     try {
       dr.injectCss();
       dr.loadState();
-
       dr.setupLayerControl();
       dr.setupLayerEvents();
+      dr.createMiniControl();
       dr.setupDialogEventHandlers();
       dr.addToolboxLink();
-
-      if (dr.isLayerEnabled()) {
-        dr.enable();
-      } else {
-        dr.disable();
-      }
-
-      if (dr.state.panelOpen && dr.isLayerEnabled()) {
-        dr.renderPanel();
-      }
+      dr.renderPanel();
+      dr.renderMiniControl();
+      dr.redrawLabels();
 
       if (typeof window.addHook === 'function' && !dr.portalHookRegistered) {
         window.addHook('portalDetailsUpdated', function() {

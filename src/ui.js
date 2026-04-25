@@ -19,11 +19,9 @@
   dr.selectedStopIndex = function() {
     var guid = window.selectedPortal;
     if (!guid) return -1;
-
     for (var i = 0; i < dr.state.stops.length; i++) {
       if (dr.state.stops[i].guid === guid) return i;
     }
-
     return -1;
   };
 
@@ -33,7 +31,6 @@
       dr.showMessage('Selected portal is not in the route.');
       return;
     }
-
     dr.removeStop(index);
   };
 
@@ -55,7 +52,6 @@
         // Fall through to hiding the content if the IITC dialog wrapper is unavailable.
       }
     }
-
     if (content) content.style.display = 'none';
   };
 
@@ -66,7 +62,7 @@
       dr.savePanelOpen();
       dr.renderPanel();
     } else if (action === 'open-edit') {
-      dr.state.panelView = 'edit';
+      dr.state.panelView = 'main';
       dr.state.panelOpen = true;
       dr.savePanelOpen();
       dr.renderPanel();
@@ -76,12 +72,18 @@
       dr.closeDialog();
     } else if (action === 'toggle-selected-stop') {
       dr.toggleSelectedPortalStop();
+    } else if (action === 'add-selected-stop') {
+      dr.addSelectedPortal();
     } else if (action === 'move-stop-up') {
       dr.moveStop(Number(target.getAttribute('data-index')), Number(target.getAttribute('data-index')) - 1);
     } else if (action === 'move-stop-down') {
       dr.moveStop(Number(target.getAttribute('data-index')), Number(target.getAttribute('data-index')) + 1);
     } else if (action === 'remove-stop') {
       dr.removeStop(Number(target.getAttribute('data-index')));
+    } else if (action === 'select-stop') {
+      dr.selectStopPortal(Number(target.getAttribute('data-index')), false);
+    } else if (action === 'select-stop-center') {
+      dr.selectStopPortal(Number(target.getAttribute('data-index')), true);
     } else if (action === 'calculate-route') {
       dr.calculateRoute();
     } else if (action === 'open-google-maps') {
@@ -97,39 +99,23 @@
 
     var DrivingRouteControl = L.Control.extend({
       options: { position: 'topleft' },
-
       onAdd: function() {
-        var container = L.DomUtil.create(
-          'div',
-          'leaflet-bar leaflet-control driving-route-mini-control iitc-plugin-driving-route-control'
-        );
-
+        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control driving-route-mini-control iitc-plugin-driving-route-control');
         container.id = dr.DOM_IDS.miniControl;
-
         L.DomEvent.disableClickPropagation(container);
         L.DomEvent.disableScrollPropagation(container);
-
         container.addEventListener('click', function(ev) {
           var button = ev.target.closest('[data-action]');
           if (!button) return;
-
           ev.preventDefault();
           dr.handleAction(button.getAttribute('data-action'), button);
         });
-
         return container;
       }
     });
 
     dr.state.miniControl = new DrivingRouteControl();
     window.map.addControl(dr.state.miniControl);
-  };
-
-  dr.removeMiniControl = function() {
-    if (!window.map || !dr.state.miniControl) return;
-
-    window.map.removeControl(dr.state.miniControl);
-    dr.state.miniControl = null;
   };
 
   dr.renderMiniControl = function() {
@@ -144,8 +130,9 @@
 
     container.innerHTML = '' +
       '<a href="#" title="Open route in Google Maps" data-action="open-google-maps">M</a>' +
+      '<a href="#" title="Plot/replot route on map" data-action="calculate-route">P</a>' +
       '<a href="#" class="driving-route-mini-add' + addRemoveClass + '" title="' + addRemoveTitle + '" data-action="toggle-selected-stop">' + addRemoveText + '</a>' +
-      '<a href="#" title="Edit waypoints" data-action="open-edit">' + dr.state.stops.length + '</a>' +
+      '<a href="#" title="Open Driving Route menu" data-action="open-main">' + dr.state.stops.length + '</a>' +
       '<a href="#" title="Driving Route menu" data-action="open-main">=</a>';
   };
 
@@ -216,15 +203,29 @@
 
       var target = ev.target;
       if (target && target.getAttribute('data-field') === 'default-stop-minutes') {
-        var value = Math.max(0, Number(target.value || 0));
+        var value = dr.parseDurationMinutes(target.value);
+        if (value === null) {
+          dr.showMessage('Invalid duration. Use values like 15m, 1.5h, or 2d.');
+          target.value = dr.formatDurationInput(dr.state.settings.defaultStopMinutes);
+          return;
+        }
+
         dr.state.settings.defaultStopMinutes = value;
         dr.saveSettings();
-
         if (dr.state.route && dr.state.route.legs) {
           dr.state.route.totals = dr.calculateTotals(dr.state.route.legs);
         }
-
         dr.renderPanel();
+      } else if (target && target.getAttribute('data-field') === 'stop-minutes') {
+        var stopIndex = Number(target.getAttribute('data-index'));
+        var stopValue = dr.parseDurationMinutes(target.value);
+        if (stopValue === null) {
+          dr.showMessage('Invalid duration. Use values like 15m, 1.5h, or 2d.');
+          target.value = dr.formatDurationInput(dr.getEffectiveStopMinutes(dr.state.stops[stopIndex]));
+          return;
+        }
+
+        dr.setStopMinutes(stopIndex, stopValue);
       }
     });
   };
@@ -251,15 +252,14 @@
 
   dr.injectCss = function() {
     if (document.getElementById(dr.DOM_IDS.css)) return;
-
     var style = document.createElement('style');
     style.id = dr.DOM_IDS.css;
     style.textContent = dr.CSS;
     document.head.appendChild(style);
   };
 
+
   dr.setupLayerControl = function() {
-    if (!window.L || !window.map) return;
     if (dr.layerGroup) return;
 
     dr.layerGroup = L.layerGroup();
@@ -268,8 +268,6 @@
       window.addLayerGroup('Driving Route', dr.layerGroup, true);
     } else if (window.layerChooser && typeof window.layerChooser.addOverlay === 'function') {
       window.layerChooser.addOverlay(dr.layerGroup, 'Driving Route');
-      dr.layerGroup.addTo(window.map);
-    } else {
       dr.layerGroup.addTo(window.map);
     }
   };
@@ -291,54 +289,18 @@
     dr.layerEventsRegistered = true;
   };
 
-  dr.isLayerEnabled = function() {
-    if (!window.map || !dr.layerGroup) return true;
-    return window.map.hasLayer(dr.layerGroup);
-  };
-
-  dr.enable = function() {
-    dr.state.enabled = true;
-
-    dr.createMiniControl();
-    dr.renderMiniControl();
-
-    if (typeof dr.redrawLabels === 'function') {
-      dr.redrawLabels();
-    }
-  };
-
-  dr.disable = function() {
-    dr.state.enabled = false;
-
-    dr.removeMiniControl();
-    dr.closeDialog();
-
-    if (typeof dr.clearLabels === 'function') {
-      dr.clearLabels();
-    } else if (typeof dr.redrawLabels === 'function') {
-      dr.redrawLabels();
-    }
-  };
-
   dr.setup = function() {
     try {
       dr.injectCss();
       dr.loadState();
-
       dr.setupLayerControl();
       dr.setupLayerEvents();
+      dr.createMiniControl();
       dr.setupDialogEventHandlers();
       dr.addToolboxLink();
-
-      if (dr.isLayerEnabled()) {
-        dr.enable();
-      } else {
-        dr.disable();
-      }
-
-      if (dr.state.panelOpen && dr.isLayerEnabled()) {
-        dr.renderPanel();
-      }
+      dr.renderPanel();
+      dr.renderMiniControl();
+      dr.redrawLabels();
 
       if (typeof window.addHook === 'function' && !dr.portalHookRegistered) {
         window.addHook('portalDetailsUpdated', function() {
