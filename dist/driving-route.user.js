@@ -178,9 +178,22 @@ function wrapper(plugin_info) {
   opacity: 0.82;
 }
 
+.driving-route-stop-tooltip,
+.driving-route-stop-tooltip * {
+  pointer-events: none;
+}
+
 .driving-route-stop-label {
   border: 0;
   background: transparent;
+}
+
+.driving-route-stop-label span {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+}
+
+.driving-route-stop-tooltip {
+  font-size: 11px;
 }
 
 .driving-route-portal-action {
@@ -481,15 +494,31 @@ function wrapper(plugin_info) {
     });
   };
 
+  dr.routeOverlayTarget = function() {
+    if (dr.layerGroup) return dr.layerGroup;
+    return window.map;
+  };
+
   dr.ensureLayers = function() {
     if (!dr.state.layers.labels) {
-      dr.state.layers.labels = L.layerGroup().addTo(window.map);
+      dr.state.layers.labels = L.layerGroup().addTo(dr.routeOverlayTarget());
+    }
+  };
+
+  dr.clearLabels = function() {
+    if (dr.state.layers.labels) {
+      dr.state.layers.labels.clearLayers();
     }
   };
 
   dr.clearRouteLine = function() {
     if (dr.state.layers.routeLine) {
-      window.map.removeLayer(dr.state.layers.routeLine);
+      var owner = dr.routeOverlayTarget();
+      if (owner && owner.hasLayer && owner.hasLayer(dr.state.layers.routeLine)) {
+        owner.removeLayer(dr.state.layers.routeLine);
+      } else if (window.map && window.map.hasLayer && window.map.hasLayer(dr.state.layers.routeLine)) {
+        window.map.removeLayer(dr.state.layers.routeLine);
+      }
       dr.state.layers.routeLine = null;
     }
   };
@@ -497,18 +526,31 @@ function wrapper(plugin_info) {
   dr.redrawLabels = function() {
     if (!window.map || !window.L) return;
     dr.ensureLayers();
-    dr.state.layers.labels.clearLayers();
+    dr.clearLabels();
 
     dr.state.stops.forEach(function(stop, index) {
       var icon = L.divIcon({
         className: 'driving-route-stop-label',
         html: '<span>' + (index + 1) + '</span>',
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
+        iconSize: [18, 18],
+        iconAnchor: [0, 24]
       });
 
-      var marker = L.marker([stop.lat, stop.lng], { icon: icon, interactive: true });
-      marker.bindTooltip((index + 1) + '. ' + stop.title, { direction: 'top' });
+      var marker = L.marker([stop.lat, stop.lng], {
+        icon: icon,
+        interactive: true,
+        keyboard: false,
+        bubblingMouseEvents: false
+      });
+
+      marker.bindTooltip((index + 1) + '. ' + stop.title, {
+        direction: 'right',
+        offset: [16, -10],
+        opacity: 0.9,
+        interactive: false,
+        className: 'driving-route-stop-tooltip'
+      });
+
       marker.addTo(dr.state.layers.labels);
     });
   };
@@ -520,8 +562,10 @@ function wrapper(plugin_info) {
     dr.state.layers.routeLine = L.polyline(path, {
       color: '#ff7f00',
       weight: 5,
-      opacity: 0.8
-    }).addTo(window.map);
+      opacity: 0.8,
+      interactive: false,
+      bubblingMouseEvents: false
+    }).addTo(dr.routeOverlayTarget());
 
     try {
       window.map.fitBounds(dr.state.layers.routeLine.getBounds(), { padding: [30, 30] });

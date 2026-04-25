@@ -158,9 +158,22 @@
   opacity: 0.82;
 }
 
+.driving-route-stop-tooltip,
+.driving-route-stop-tooltip * {
+  pointer-events: none;
+}
+
 .driving-route-stop-label {
   border: 0;
   background: transparent;
+}
+
+.driving-route-stop-label span {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+}
+
+.driving-route-stop-tooltip {
+  font-size: 11px;
 }
 
 .driving-route-portal-action {
