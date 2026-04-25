@@ -1,82 +1,61 @@
   dr.CSS = `
-.driving-route-panel {
-  position: fixed;
-  z-index: 5000;
-  left: 8px;
-  right: 8px;
-  bottom: 8px;
-  max-height: 58vh;
-  overflow: auto;
-  background: rgba(8, 16, 24, 0.96);
-  color: #f5f5f5;
-  border: 1px solid #ff7f00;
-  border-radius: 10px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
-  font-size: 14px;
+.driving-route-mini-control {
+  margin-top: 10px;
 }
 
-.driving-route-panel * {
-  box-sizing: border-box;
-}
-
-.driving-route-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-bottom: 1px solid rgba(255, 127, 0, 0.4);
-}
-
-.driving-route-count {
-  margin-left: auto;
-  opacity: 0.75;
-}
-
-.driving-route-toggle,
-.driving-route-actions button,
-.driving-route-small-button {
-  min-height: 36px;
-  padding: 8px 10px;
-  border: 1px solid #ff7f00;
-  border-radius: 8px;
-  background: #17202a;
-  color: #fff;
-  font: inherit;
-}
-
-.driving-route-toggle {
-  min-width: 36px;
+.driving-route-mini-control a {
+  text-align: center;
+  font-size: 12px;
   font-weight: bold;
 }
 
-.driving-route-body {
-  padding: 10px;
+.driving-route-dialog-content {
+  font-size: 11px;
+  line-height: 1.25;
 }
 
-.driving-route-panel-collapsed .driving-route-body {
-  display: none;
+.driving-route-dialog-content button,
+.driving-route-dialog-content input {
+  font-size: 11px;
+}
+
+.driving-route-mini-control .driving-route-mini-remove {
+  color: #c00000;
+}
+
+.driving-route-dialog-content * {
+  box-sizing: border-box;
+}
+
+.driving-route-body p {
+  margin: 0 0 8px;
+}
+
+.driving-route-summary {
+  margin-top: 8px;
 }
 
 .driving-route-setting {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 10px;
+  margin: 12px 0 10px;
 }
 
 .driving-route-setting input {
   width: 4.5em;
-  min-height: 34px;
-  padding: 4px 6px;
-  border-radius: 6px;
-  border: 1px solid #777;
-  background: #101820;
-  color: #fff;
 }
 
 .driving-route-empty {
   margin: 8px 0 12px;
-  opacity: 0.85;
+}
+
+.driving-route-compact-list {
+  margin: 8px 0 10px;
+}
+
+.driving-route-compact-list div {
+  margin: 4px 0;
 }
 
 .driving-route-stops {
@@ -86,11 +65,10 @@
 }
 
 .driving-route-stop {
-  margin: 8px 0;
-  padding: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
+  margin: 6px 0;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.18);
 }
 
 .driving-route-stop-title {
@@ -105,29 +83,45 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #ff7f00;
+  min-width: 1.4em;
+  height: 1.4em;
+  padding: 0 0.3em;
+  border-radius: 0.7em;
+  background: #ffd800;
   color: #111;
   font-weight: bold;
+  font-size: 0.85em;
 }
 
 .driving-route-leg,
 .driving-route-stop-meta {
   margin-top: 5px;
-  opacity: 0.85;
-}
-
-.driving-route-small-button {
-  margin-top: 8px;
+  opacity: 0.9;
 }
 
 .driving-route-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-top: 10px;
+}
+
+.driving-route-small-button:disabled {
+  opacity: 0.45;
+}
+
+.driving-route-stop-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.driving-route-footer-actions {
+  justify-content: flex-end;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  margin-top: 10px;
+  padding-top: 7px;
 }
 
 .driving-route-totals {
@@ -138,9 +132,9 @@
 }
 
 .driving-route-totals div {
-  padding: 8px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.07);
+  padding: 6px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .driving-route-totals span,
@@ -152,8 +146,8 @@
   display: none;
   margin-top: 10px;
   padding: 8px;
-  border-radius: 8px;
-  background: rgba(255, 127, 0, 0.16);
+  border: 1px solid #ffd800;
+  background: rgba(0, 0, 0, 0.22);
 }
 
 .driving-route-message-visible {
@@ -171,23 +165,5 @@
 
 .driving-route-portal-action {
   margin-top: 8px;
-}
-
-.driving-route-portal-action a {
-  display: inline-block;
-  min-height: 36px;
-  padding: 8px 10px;
-  border: 1px solid #ff7f00;
-  border-radius: 8px;
-}
-
-@media (min-width: 720px) {
-  .driving-route-panel {
-    left: auto;
-    right: 12px;
-    bottom: 48px;
-    width: 360px;
-    max-height: 70vh;
-  }
 }
 `;

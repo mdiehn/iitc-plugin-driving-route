@@ -6,7 +6,9 @@
       labels: null,
       routeLine: null
     },
-    panelOpen: true
+    panelOpen: false,
+    panelView: 'main',
+    miniControl: null
   };
 
   dr.getEffectiveStopMinutes = function(stop) {

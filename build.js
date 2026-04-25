@@ -10,7 +10,7 @@ const outFile = path.join(distDir, "driving-route.user.js");
 const sources = [
   "src/banner.js",
   "src/wrapper-start.js",
-  "src/css.js",
+  "src/styles.js",
   "src/constants.js",
   "src/state.js",
   "src/storage.js",

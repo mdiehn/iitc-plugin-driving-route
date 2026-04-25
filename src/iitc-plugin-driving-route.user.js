@@ -1,50 +1,127 @@
-// ==UserScript==
-// @id             iitc-plugin-driving-route
-// @name           IITC plugin: Driving Route
-// @category       Layer
-// @version        0.1.0-dev
-// @namespace      https://github.com/mdiehn/iitc-plugin-driving-route
-// @description    Mobile-first route planning through selected portals with segment drive times, stop-time accounting, and Google Maps export.
-// @include        https://intel.ingress.com/*
-// @include        http://intel.ingress.com/*
-// @match          https://intel.ingress.com/*
-// @match          http://intel.ingress.com/*
-// @grant          none
-// ==/UserScript==
-
 function wrapper(plugin_info) {
   if (typeof window.plugin !== 'function') window.plugin = function() {};
   window.plugin.drivingRoute = window.plugin.drivingRoute || {};
 
   var dr = window.plugin.drivingRoute;
+  dr.ID = 'driving-route';
+  dr.NAME = 'Driving Route';
+  dr.VERSION = '0.1.0-dev';
 
+  dr.STORAGE_KEYS = {
+    stops: 'iitc-driving-route-stops',
+    settings: 'iitc-driving-route-settings',
+    panelOpen: 'iitc-driving-route-panel-open',
+    panelPosition: 'iitc-driving-route-panel-position'
+  };
+
+  dr.DEFAULT_SETTINGS = {
+    defaultStopMinutes: 5,
+    includeReturnToStart: false
+  };
+  dr.state = {
+    stops: [],
+    route: null,
+    settings: Object.assign({}, dr.DEFAULT_SETTINGS),
+    layers: {
+      labels: null,
+      routeLine: null
+    },
+    panelOpen: false,
+    panelView: 'main',
+    miniControl: null
+  };
+
+  dr.getEffectiveStopMinutes = function(stop) {
+    if (stop && typeof stop.stopMinutes === 'number' && !Number.isNaN(stop.stopMinutes)) {
+      return stop.stopMinutes;
+    }
+    return dr.state.settings.defaultStopMinutes;
+  };
   dr.CSS = `
 .driving-route-mini-control {
   margin-top: 10px;
 }
 
-.driving-route-mini-control a {
+.driving-route-mini-control button {
+  display: block;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid #ccc;
+  background: #fff;
+  color: #111;
+  font: bold 20px/34px Arial, sans-serif;
   text-align: center;
-  font-size: 12px;
-  font-weight: bold;
+  cursor: pointer;
 }
 
-.driving-route-dialog-content {
-  font-size: 11px;
-  line-height: 1.25;
+.driving-route-mini-control button:last-child {
+  border-bottom: 0;
 }
 
-.driving-route-dialog-content button,
-.driving-route-dialog-content input {
-  font-size: 11px;
+.driving-route-mini-control button:hover,
+.driving-route-mini-control button:focus {
+  background: #f4f4f4;
+}
+
+.driving-route-mini-control .driving-route-mini-add {
+  font-size: 26px;
 }
 
 .driving-route-mini-control .driving-route-mini-remove {
   color: #c00000;
 }
 
-.driving-route-dialog-content * {
+.driving-route-panel {
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 192px;
+  width: min(520px, 100vw - 2px);
+  max-height: calc(100vh - 230px);
+  overflow: auto;
+  background: rgba(0, 48, 64, 0.88);
+  color: #f5f5f5;
+  border: 2px solid #20b8c8;
+  border-radius: 0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+  font-size: 16px;
+}
+
+.driving-route-panel * {
   box-sizing: border-box;
+}
+
+.driving-route-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(32, 184, 200, 0.7);
+  cursor: move;
+}
+
+.driving-route-header strong {
+  flex: 1;
+  color: #ffd800;
+  font-size: 18px;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.driving-route-window-button {
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0 6px;
+  border: 2px solid #20b8c8;
+  background: rgba(0, 48, 64, 0.7);
+  color: #20b8c8;
+  font: bold 24px/24px Arial, sans-serif;
+}
+
+.driving-route-body {
+  padding: 12px 16px 14px;
 }
 
 .driving-route-body p {
@@ -64,6 +141,13 @@ function wrapper(plugin_info) {
 
 .driving-route-setting input {
   width: 4.5em;
+  min-height: 32px;
+  padding: 4px 6px;
+  border: 1px solid #aaa;
+  border-radius: 3px;
+  background: #fff;
+  color: #111;
+  font: inherit;
 }
 
 .driving-route-empty {
@@ -85,8 +169,8 @@ function wrapper(plugin_info) {
 }
 
 .driving-route-stop {
-  margin: 6px 0;
-  padding: 6px;
+  margin: 8px 0;
+  padding: 8px;
   border: 1px solid rgba(255, 255, 255, 0.25);
   background: rgba(0, 0, 0, 0.18);
 }
@@ -103,14 +187,12 @@ function wrapper(plugin_info) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.4em;
-  height: 1.4em;
-  padding: 0 0.3em;
-  border-radius: 0.7em;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
   background: #ffd800;
   color: #111;
   font-weight: bold;
-  font-size: 0.85em;
 }
 
 .driving-route-leg,
@@ -126,6 +208,17 @@ function wrapper(plugin_info) {
   margin-top: 10px;
 }
 
+.driving-route-actions button,
+.driving-route-small-button {
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 2px solid #ffd800;
+  border-radius: 0;
+  background: rgba(0, 48, 64, 0.75);
+  color: #ffd800;
+  font: inherit;
+}
+
 .driving-route-small-button:disabled {
   opacity: 0.45;
 }
@@ -139,9 +232,9 @@ function wrapper(plugin_info) {
 
 .driving-route-footer-actions {
   justify-content: flex-end;
-  border-top: 1px solid rgba(255, 255, 255, 0.25);
-  margin-top: 10px;
-  padding-top: 7px;
+  border-top: 1px solid rgba(32, 184, 200, 0.7);
+  margin: 14px -16px -14px;
+  padding: 8px 14px;
 }
 
 .driving-route-totals {
@@ -152,7 +245,7 @@ function wrapper(plugin_info) {
 }
 
 .driving-route-totals div {
-  padding: 6px;
+  padding: 8px;
   background: rgba(0, 0, 0, 0.18);
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
@@ -186,44 +279,48 @@ function wrapper(plugin_info) {
 .driving-route-portal-action {
   margin-top: 8px;
 }
+
+.driving-route-portal-action a {
+  display: inline-block;
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 2px solid #ffd800;
+  color: #ffd800;
+}
+
+@media (max-width: 700px) {
+  .driving-route-panel {
+    left: 0;
+    right: auto;
+    top: 192px;
+    bottom: auto;
+    width: calc(100vw - 2px);
+    max-height: calc(100vh - 250px);
+    font-size: 18px;
+  }
+
+  .driving-route-header {
+    cursor: default;
+  }
+
+  .driving-route-header strong {
+    font-size: 20px;
+  }
+
+  .driving-route-actions button,
+  .driving-route-small-button {
+    min-height: 36px;
+  }
+}
+
+@media (min-width: 701px) {
+  .driving-route-panel {
+    width: 390px;
+    max-height: calc(100vh - 220px);
+    resize: both;
+  }
+}
 `;
-
-  dr.ID = 'driving-route';
-  dr.NAME = 'Driving Route';
-  dr.VERSION = '0.1.0-dev';
-
-  dr.STORAGE_KEYS = {
-    stops: 'iitc-driving-route-stops',
-    settings: 'iitc-driving-route-settings',
-    panelOpen: 'iitc-driving-route-panel-open',
-    panelPosition: 'iitc-driving-route-panel-position'
-  };
-
-  dr.DEFAULT_SETTINGS = {
-    defaultStopMinutes: 5,
-    includeReturnToStart: false
-  };
-
-  dr.state = {
-    stops: [],
-    route: null,
-    settings: Object.assign({}, dr.DEFAULT_SETTINGS),
-    layers: {
-      labels: null,
-      routeLine: null
-    },
-    panelOpen: false,
-    panelView: 'main',
-    miniControl: null
-  };
-
-  dr.getEffectiveStopMinutes = function(stop) {
-    if (stop && typeof stop.stopMinutes === 'number' && !Number.isNaN(stop.stopMinutes)) {
-      return stop.stopMinutes;
-    }
-    return dr.state.settings.defaultStopMinutes;
-  };
-
   dr.loadState = function() {
     try {
       var rawSettings = localStorage.getItem(dr.STORAGE_KEYS.settings);
@@ -255,7 +352,6 @@ function wrapper(plugin_info) {
   dr.savePanelOpen = function() {
     localStorage.setItem(dr.STORAGE_KEYS.panelOpen, String(dr.state.panelOpen));
   };
-
   dr.formatDuration = function(seconds) {
     seconds = Math.max(0, Math.round(seconds || 0));
     var minutes = Math.round(seconds / 60);
@@ -273,51 +369,6 @@ function wrapper(plugin_info) {
     if (miles >= 10) return miles.toFixed(0) + ' mi';
     return miles.toFixed(1) + ' mi';
   };
-
-  dr.portalToStop = function(guid) {
-    var portal = guid && window.portals && window.portals[guid];
-    if (!portal || !portal.getLatLng) return null;
-
-    var latlng = portal.getLatLng();
-    var data = portal.options && portal.options.data ? portal.options.data : {};
-
-    return {
-      guid: guid,
-      title: data.title || data.name || guid,
-      lat: latlng.lat,
-      lng: latlng.lng
-    };
-  };
-
-  dr.addSelectedPortal = function() {
-    var guid = window.selectedPortal;
-    var stop = dr.portalToStop(guid);
-    if (!stop) {
-      dr.showMessage('No selected portal found.');
-      return;
-    }
-    dr.addStop(stop);
-  };
-
-  dr.injectPortalDetailsAction = function() {
-    var container = document.querySelector('#portaldetails .linkdetails') || document.querySelector('#portaldetails');
-    if (!container || container.querySelector('.driving-route-add-link')) return;
-
-    var link = document.createElement('a');
-    link.href = '#';
-    link.className = 'driving-route-add-link';
-    link.textContent = 'Add to Driving Route';
-    link.addEventListener('click', function(ev) {
-      ev.preventDefault();
-      dr.addSelectedPortal();
-    });
-
-    var wrapper = document.createElement('div');
-    wrapper.className = 'driving-route-portal-action';
-    wrapper.appendChild(link);
-    container.appendChild(wrapper);
-  };
-
   dr.addStop = function(stop) {
     if (!stop || typeof stop.lat !== 'number' || typeof stop.lng !== 'number') return;
 
@@ -394,7 +445,42 @@ function wrapper(plugin_info) {
       distanceMeters: distanceMeters
     };
   };
+  dr.googleMapsUrl = function() {
+    var stops = dr.state.stops;
+    if (stops.length < 2) return null;
 
+    var origin = stops[0];
+    var destination = stops[stops.length - 1];
+    var waypoints = stops.slice(1, -1);
+
+    var params = new URLSearchParams();
+    params.set('api', '1');
+    params.set('travelmode', 'driving');
+    params.set('origin', origin.lat + ',' + origin.lng);
+    params.set('destination', destination.lat + ',' + destination.lng);
+
+    if (waypoints.length > 0) {
+      params.set('waypoints', waypoints.map(function(stop) {
+        return stop.lat + ',' + stop.lng;
+      }).join('|'));
+    }
+
+    return 'https://www.google.com/maps/dir/?' + params.toString();
+  };
+
+  dr.openGoogleMaps = function() {
+    var url = dr.googleMapsUrl();
+    if (!url) {
+      dr.showMessage('Add at least two portals first.');
+      return;
+    }
+
+    if (dr.state.stops.length > 10) {
+      dr.showMessage('Google Maps may reject routes with too many stops. Try fewer than 10 stops for now.');
+    }
+
+    window.open(url, '_blank', 'noopener');
+  };
   dr.getGoogleLatLng = function(stop) {
     return new google.maps.LatLng(stop.lat, stop.lng);
   };
@@ -472,7 +558,6 @@ function wrapper(plugin_info) {
       dr.renderPanel();
     });
   };
-
   dr.ensureLayers = function() {
     if (!dr.state.layers.labels) {
       dr.state.layers.labels = L.layerGroup().addTo(window.map);
@@ -521,7 +606,6 @@ function wrapper(plugin_info) {
       console.warn('Driving Route: unable to fit route bounds', e);
     }
   };
-
   dr.escapeHtml = function(value) {
     return String(value == null ? '' : value)
       .replace(/&/g, '&amp;')
@@ -529,6 +613,15 @@ function wrapper(plugin_info) {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  };
+
+  dr.renderPanelHeader = function(title) {
+    var html = '';
+    html += '<div class="driving-route-header">';
+    html += '<strong>' + dr.escapeHtml(title) + '</strong>';
+    html += '<button class="driving-route-window-button" type="button" title="Close" data-action="close-panel">×</button>';
+    html += '</div>';
+    return html;
   };
 
   dr.renderEmptyHelp = function() {
@@ -552,8 +645,8 @@ function wrapper(plugin_info) {
 
       html += '<div class="driving-route-stop-actions">';
       html += '<button type="button" class="driving-route-small-button" data-action="remove-stop" data-index="' + index + '">Remove</button>';
-      html += '<button type="button" class="driving-route-small-button" data-action="move-stop-up" data-index="' + index + '" ' + (index === 0 ? 'disabled' : '') + '>Up</button>';
-      html += '<button type="button" class="driving-route-small-button" data-action="move-stop-down" data-index="' + index + '" ' + (index === stops.length - 1 ? 'disabled' : '') + '>Dn</button>';
+      html += '<button type="button" class="driving-route-small-button" data-action="move-stop-up" data-index="' + index + '" ' + (index === 0 ? 'disabled' : '') + '>↑</button>';
+      html += '<button type="button" class="driving-route-small-button" data-action="move-stop-down" data-index="' + index + '" ' + (index === stops.length - 1 ? 'disabled' : '') + '>↓</button>';
       html += '</div>';
 
       html += '</li>';
@@ -579,6 +672,7 @@ function wrapper(plugin_info) {
     var stops = dr.state.stops;
     var html = '';
 
+    html += dr.renderPanelHeader('Driving Route');
     html += '<div class="driving-route-body">';
     html += '<p>Mark portals as waypoints to prepare a driving route.</p>';
     html += '<p class="driving-route-summary"><b>Waypoints:</b> ' + stops.length + '</p>';
@@ -611,6 +705,7 @@ function wrapper(plugin_info) {
 
   dr.renderEditPanel = function(legsByToIndex) {
     var html = '';
+    html += dr.renderPanelHeader('Driving Route - Edit waypoints');
     html += '<div class="driving-route-body">';
     html += '<p>Change order or delete waypoints:</p>';
     html += dr.renderStopsList(legsByToIndex);
@@ -625,12 +720,18 @@ function wrapper(plugin_info) {
   };
 
   dr.renderPanel = function() {
+    var panel = document.getElementById('driving-route-panel');
+    if (!panel) return;
+
     dr.renderMiniControl();
 
     if (!dr.state.panelOpen) {
-      dr.closeDialog();
+      panel.innerHTML = '';
+      panel.style.display = 'none';
       return;
     }
+
+    panel.style.display = '';
 
     var route = dr.state.route;
     var legsByToIndex = {};
@@ -638,62 +739,59 @@ function wrapper(plugin_info) {
       route.legs.forEach(function(leg) { legsByToIndex[leg.toIndex] = leg; });
     }
 
-    var title = dr.state.panelView === 'edit' ? 'Driving Route - Edit waypoints' : 'Driving Route';
-    var bodyHtml = dr.state.panelView === 'edit' ? dr.renderEditPanel(legsByToIndex) : dr.renderMainPanel(legsByToIndex);
-    var html = '<div id="driving-route-dialog-content" class="driving-route-dialog-content">' + bodyHtml + '</div>';
-
-    if (typeof window.dialog === 'function') {
-      window.dialog({
-        id: 'driving-route',
-        title: title,
-        html: html,
-        dialogClass: 'driving-route-dialog',
-        width: 'auto'
-      });
+    if (dr.state.panelView === 'edit') {
+      panel.innerHTML = dr.renderEditPanel(legsByToIndex);
     } else {
-      console.log('Driving Route: IITC dialog API is unavailable.');
-    }
-  };
-
-  dr.googleMapsUrl = function() {
-    var stops = dr.state.stops;
-    if (stops.length < 2) return null;
-
-    var origin = stops[0];
-    var destination = stops[stops.length - 1];
-    var waypoints = stops.slice(1, -1);
-
-    var params = new URLSearchParams();
-    params.set('api', '1');
-    params.set('travelmode', 'driving');
-    params.set('origin', origin.lat + ',' + origin.lng);
-    params.set('destination', destination.lat + ',' + destination.lng);
-
-    if (waypoints.length > 0) {
-      params.set('waypoints', waypoints.map(function(stop) {
-        return stop.lat + ',' + stop.lng;
-      }).join('|'));
+      panel.innerHTML = dr.renderMainPanel(legsByToIndex);
     }
 
-    return 'https://www.google.com/maps/dir/?' + params.toString();
+    dr.enablePanelDragging(panel);
+  };
+  dr.portalToStop = function(guid) {
+    var portal = guid && window.portals && window.portals[guid];
+    if (!portal || !portal.getLatLng) return null;
+
+    var latlng = portal.getLatLng();
+    var data = portal.options && portal.options.data ? portal.options.data : {};
+
+    return {
+      guid: guid,
+      title: data.title || data.name || guid,
+      lat: latlng.lat,
+      lng: latlng.lng
+    };
   };
 
-  dr.openGoogleMaps = function() {
-    var url = dr.googleMapsUrl();
-    if (!url) {
-      dr.showMessage('Add at least two portals first.');
+  dr.addSelectedPortal = function() {
+    var guid = window.selectedPortal;
+    var stop = dr.portalToStop(guid);
+    if (!stop) {
+      dr.showMessage('No selected portal found.');
       return;
     }
-
-    if (dr.state.stops.length > 10) {
-      dr.showMessage('Google Maps may reject routes with too many stops. Try fewer than 10 stops for now.');
-    }
-
-    window.open(url, '_blank', 'noopener');
+    dr.addStop(stop);
   };
 
+  dr.injectPortalDetailsAction = function() {
+    var container = document.querySelector('#portaldetails .linkdetails') || document.querySelector('#portaldetails');
+    if (!container || container.querySelector('.driving-route-add-link')) return;
+
+    var link = document.createElement('a');
+    link.href = '#';
+    link.className = 'driving-route-add-link';
+    link.textContent = 'Add to Driving Route';
+    link.addEventListener('click', function(ev) {
+      ev.preventDefault();
+      dr.addSelectedPortal();
+    });
+
+    var wrapper = document.createElement('div');
+    wrapper.className = 'driving-route-portal-action';
+    wrapper.appendChild(link);
+    container.appendChild(wrapper);
+  };
   dr.setBusy = function(isBusy) {
-    var panel = document.getElementById('driving-route-dialog-content');
+    var panel = document.getElementById('driving-route-panel');
     if (panel) panel.classList.toggle('driving-route-busy', !!isBusy);
   };
 
@@ -707,6 +805,15 @@ function wrapper(plugin_info) {
       }, 5000);
     } else {
       console.log('Driving Route:', message);
+    }
+  };
+
+  dr.isDesktopLayout = function() {
+    try {
+      return typeof window.matchMedia === 'function' &&
+        window.matchMedia('(min-width: 701px)').matches;
+    } catch (e) {
+      return false;
     }
   };
 
@@ -736,17 +843,57 @@ function wrapper(plugin_info) {
     }
   };
 
-  dr.closeDialog = function() {
-    var content = document.getElementById('driving-route-dialog-content');
-    if (content && window.jQuery) {
-      try {
-        window.jQuery(content).closest('.ui-dialog-content').dialog('close');
-        return;
-      } catch (e) {
-        // Fall through to hiding the content if the IITC dialog wrapper is unavailable.
-      }
-    }
-    if (content) content.style.display = 'none';
+  dr.enablePanelDragging = function(panel) {
+    var header = panel.querySelector('.driving-route-header');
+    if (!header) return;
+    if (header.dataset.dragEnabled === 'true') return;
+
+    header.dataset.dragEnabled = 'true';
+
+    var dragging = false;
+    var startX = 0;
+    var startY = 0;
+    var startLeft = 0;
+    var startTop = 0;
+
+    header.addEventListener('mousedown', function(ev) {
+      if (!dr.isDesktopLayout()) return;
+      if (ev.target.closest('button, a, input, select, textarea')) return;
+
+      dragging = true;
+      startX = ev.clientX;
+      startY = ev.clientY;
+
+      var rect = panel.getBoundingClientRect();
+      startLeft = rect.left;
+      startTop = rect.top;
+
+      panel.style.left = startLeft + 'px';
+      panel.style.top = startTop + 'px';
+      panel.style.right = 'auto';
+      panel.style.bottom = 'auto';
+
+      ev.preventDefault();
+    });
+
+    window.addEventListener('mousemove', function(ev) {
+      if (!dragging) return;
+
+      var newLeft = startLeft + ev.clientX - startX;
+      var newTop = startTop + ev.clientY - startY;
+
+      newLeft = Math.max(0, Math.min(window.innerWidth - panel.offsetWidth, newLeft));
+      newTop = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, newTop));
+
+      panel.style.left = newLeft + 'px';
+      panel.style.top = newTop + 'px';
+    });
+
+    window.addEventListener('mouseup', function() {
+      if (!dragging) return;
+      dragging = false;
+      dr.savePanelPosition(panel);
+    });
   };
 
   dr.handleAction = function(action, target) {
@@ -763,7 +910,7 @@ function wrapper(plugin_info) {
     } else if (action === 'close-panel') {
       dr.state.panelOpen = false;
       dr.savePanelOpen();
-      dr.closeDialog();
+      dr.renderPanel();
     } else if (action === 'toggle-selected-stop') {
       dr.toggleSelectedPortalStop();
     } else if (action === 'move-stop-up') {
@@ -788,12 +935,12 @@ function wrapper(plugin_info) {
     var DrivingRouteControl = L.Control.extend({
       options: { position: 'topleft' },
       onAdd: function() {
-        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control driving-route-mini-control');
+        var container = L.DomUtil.create('div', 'leaflet-bar driving-route-mini-control');
         container.id = 'driving-route-mini-control';
         L.DomEvent.disableClickPropagation(container);
         L.DomEvent.disableScrollPropagation(container);
         container.addEventListener('click', function(ev) {
-          var button = ev.target.closest('[data-action]');
+          var button = ev.target.closest('button[data-action]');
           if (!button) return;
           ev.preventDefault();
           dr.handleAction(button.getAttribute('data-action'), button);
@@ -813,35 +960,37 @@ function wrapper(plugin_info) {
     var selectedIndex = dr.selectedStopIndex();
     var selectedInRoute = selectedIndex >= 0;
     var addRemoveClass = selectedInRoute ? ' driving-route-mini-remove' : '';
-    var addRemoveText = selectedInRoute ? '-' : '+';
+    var addRemoveText = selectedInRoute ? '−' : '+';
     var addRemoveTitle = selectedInRoute ? 'Remove selected portal from route' : 'Add selected portal to route';
 
     container.innerHTML = '' +
-      '<a href="#" title="Open route in Google Maps" data-action="open-google-maps">M</a>' +
-      '<a href="#" class="driving-route-mini-add' + addRemoveClass + '" title="' + addRemoveTitle + '" data-action="toggle-selected-stop">' + addRemoveText + '</a>' +
-      '<a href="#" title="Edit waypoints" data-action="open-edit">' + dr.state.stops.length + '</a>' +
-      '<a href="#" title="Driving Route menu" data-action="open-main">=</a>';
+      '<button type="button" title="Open route in Google Maps" data-action="open-google-maps">🗺</button>' +
+      '<button type="button" class="driving-route-mini-add' + addRemoveClass + '" title="' + addRemoveTitle + '" data-action="toggle-selected-stop">' + addRemoveText + '</button>' +
+      '<button type="button" title="Edit waypoints" data-action="open-edit">' + dr.state.stops.length + '</button>' +
+      '<button type="button" title="Driving Route menu" data-action="open-main">☰</button>';
   };
 
-  dr.setupDialogEventHandlers = function() {
-    if (dr.dialogEventsRegistered) return;
-    dr.dialogEventsRegistered = true;
+  dr.createPanel = function() {
+    if (document.getElementById('driving-route-panel')) return;
 
-    document.addEventListener('click', function(ev) {
-      var panel = ev.target.closest('#driving-route-dialog-content');
-      if (!panel) return;
+    var panel = document.createElement('div');
+    panel.id = 'driving-route-panel';
+    panel.className = 'driving-route-panel';
+    document.body.appendChild(panel);
 
+    if (dr.isDesktopLayout()) {
+      dr.restorePanelPosition(panel);
+    }
+    panel.addEventListener('click', function(ev) {
       var target = ev.target.closest('[data-action]');
       var action = target && target.getAttribute('data-action');
       if (!action) return;
-
       ev.preventDefault();
       dr.handleAction(action, target);
     });
 
-    document.addEventListener('dragstart', function(ev) {
-      var panel = ev.target.closest('#driving-route-dialog-content');
-      if (!panel) return;
+    panel.addEventListener('dragstart', function(ev) {
+      if (!dr.isDesktopLayout()) return;
 
       var item = ev.target.closest('.driving-route-stop');
       if (!item) return;
@@ -851,15 +1000,14 @@ function wrapper(plugin_info) {
       item.classList.add('driving-route-dragging');
     });
 
-    document.addEventListener('dragend', function(ev) {
+    panel.addEventListener('dragend', function(ev) {
       var item = ev.target.closest('.driving-route-stop');
       if (item) item.classList.remove('driving-route-dragging');
       dr.state.dragStopIndex = null;
     });
 
-    document.addEventListener('dragover', function(ev) {
-      var panel = ev.target.closest('#driving-route-dialog-content');
-      if (!panel) return;
+    panel.addEventListener('dragover', function(ev) {
+      if (!dr.isDesktopLayout()) return;
 
       var item = ev.target.closest('.driving-route-stop');
       if (!item) return;
@@ -868,9 +1016,8 @@ function wrapper(plugin_info) {
       ev.dataTransfer.dropEffect = 'move';
     });
 
-    document.addEventListener('drop', function(ev) {
-      var panel = ev.target.closest('#driving-route-dialog-content');
-      if (!panel) return;
+    panel.addEventListener('drop', function(ev) {
+      if (!dr.isDesktopLayout()) return;
 
       var item = ev.target.closest('.driving-route-stop');
       if (!item) return;
@@ -884,10 +1031,7 @@ function wrapper(plugin_info) {
       dr.moveStop(fromIndex, toIndex);
     });
 
-    document.addEventListener('change', function(ev) {
-      var panel = ev.target.closest('#driving-route-dialog-content');
-      if (!panel) return;
-
+    panel.addEventListener('change', function(ev) {
       var target = ev.target;
       if (target && target.getAttribute('data-field') === 'default-stop-minutes') {
         var value = Math.max(0, Number(target.value || 0));
@@ -933,8 +1077,8 @@ function wrapper(plugin_info) {
     try {
       dr.injectCss();
       dr.loadState();
+      dr.createPanel();
       dr.createMiniControl();
-      dr.setupDialogEventHandlers();
       dr.addToolboxLink();
       dr.renderPanel();
       dr.renderMiniControl();
@@ -954,6 +1098,34 @@ function wrapper(plugin_info) {
     }
   };
 
+  dr.savePanelPosition = function(panel) {
+    if (!panel || !dr.isDesktopLayout()) return;
+
+    var rect = panel.getBoundingClientRect();
+    localStorage.setItem(dr.STORAGE_KEYS.panelPosition, JSON.stringify({
+      left: Math.round(rect.left),
+      top: Math.round(rect.top)
+    }));
+  };
+
+  dr.restorePanelPosition = function(panel) {
+    if (!panel || !dr.isDesktopLayout()) return;
+
+    try {
+      var raw = localStorage.getItem(dr.STORAGE_KEYS.panelPosition);
+      if (!raw) return;
+
+      var pos = JSON.parse(raw);
+      if (typeof pos.left !== 'number' || typeof pos.top !== 'number') return;
+
+      panel.style.left = Math.max(0, Math.min(window.innerWidth - panel.offsetWidth, pos.left)) + 'px';
+      panel.style.top = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, pos.top)) + 'px';
+      panel.style.right = 'auto';
+      panel.style.bottom = 'auto';
+    } catch (e) {
+      console.warn('Driving Route: failed to restore panel position', e);
+    }
+  };
 
   var setup = dr.setup;
 
