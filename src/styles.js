@@ -211,6 +211,13 @@ button.driving-route-waypoint-badge {
   opacity: 0.9;
 }
 
+.driving-route-version {
+  margin-top: 8px;
+  opacity: 0.65;
+  font-size: 10px;
+  text-align: right;
+}
+
 .driving-route-totals {
   display: grid;
   grid-template-columns: 1fr 1fr;

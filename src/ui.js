@@ -371,6 +371,10 @@
 
   dr.setup = function() {
     try {
+      if (plugin_info && plugin_info.script && plugin_info.script.version) {
+        dr.VERSION = plugin_info.script.version;
+      }
+
       dr.injectCss();
       dr.loadState();
       dr.setupLayerControl();

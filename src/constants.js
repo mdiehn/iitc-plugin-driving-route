@@ -1,6 +1,7 @@
   dr.ID = 'driving-route';
   dr.NAME = 'Driving Route';
-  dr.VERSION = '0.1.0-dev';
+  dr.VERSION = '0.1.1-dev';
+  dr.SHOW_VERSION_IN_PANEL = true;
 
   dr.DOM_IDS = {
     css: 'iitc-plugin-driving-route-css',

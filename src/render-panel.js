@@ -74,6 +74,9 @@
 
     html += '<div class="driving-route-bottom-summary"><b>Waypoints:</b> ' + stops.length + '</div>';
     html += dr.renderTotals(dr.state.route);
+    if (dr.SHOW_VERSION_IN_PANEL) {
+      html += '<div class="driving-route-version">Driving Route ' + dr.escapeHtml(dr.VERSION) + '</div>';
+    }
 
     html += '<div class="driving-route-message" id="driving-route-message"></div>';
     html += '</div>';
