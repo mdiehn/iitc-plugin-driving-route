@@ -10,6 +10,9 @@
 }
 
 .driving-route-dialog-content {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   font-size: 11px;
   line-height: 1.25;
 }
@@ -52,6 +55,7 @@
 
 .driving-route-waypoints-table {
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
   margin: 6px 0 8px;
@@ -140,6 +144,10 @@
 
 .driving-route-row-button:disabled {
   opacity: 0.35;
+}
+
+.driving-route-remove-stop-button {
+  color: #ff8080 !important;
 }
 
 .driving-route-stop-num,
@@ -265,6 +273,7 @@ button.driving-route-waypoint-badge {
 }
 
 .ui-dialog.driving-route-dialog .ui-dialog-content {
+  box-sizing: border-box !important;
   overflow-x: hidden !important;
 }
 
@@ -291,22 +300,50 @@ button.driving-route-waypoint-name,
 
 @media (max-width: 640px) {
   .ui-dialog.driving-route-dialog {
+    --driving-route-iitc-bottom-bar-height: 34px;
+    --driving-route-mobile-bottom-gap: 6px;
     position: fixed !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(
+      var(--driving-route-iitc-bottom-bar-height) +
+      var(--driving-route-mobile-bottom-gap) +
+      env(safe-area-inset-bottom, 0px)
+    ) !important;
     top: auto !important;
     width: 100vw !important;
     max-width: 100vw !important;
-    max-height: calc(68dvh - env(safe-area-inset-bottom, 0px));
+    max-height: calc(
+      68dvh -
+      var(--driving-route-iitc-bottom-bar-height) -
+      var(--driving-route-mobile-bottom-gap) -
+      env(safe-area-inset-bottom, 0px)
+    );
   }
 
   .ui-dialog.driving-route-dialog .ui-dialog-content {
-    width: 100% !important;
-    max-height: calc(68dvh - 40px - env(safe-area-inset-bottom, 0px)) !important;
+    width: auto !important;
+    max-height: calc(
+      68dvh -
+      40px -
+      var(--driving-route-iitc-bottom-bar-height) -
+      var(--driving-route-mobile-bottom-gap) -
+      env(safe-area-inset-bottom, 0px)
+    ) !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .driving-route-row-action {
+    width: 26px;
+  }
+
+  .driving-route-row-button {
+    width: 24px;
+    min-width: 24px;
   }
 }
 `;

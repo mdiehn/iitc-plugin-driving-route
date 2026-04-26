@@ -56,6 +56,11 @@
   };
 
   dr.handleAction = function(action, target) {
+    if (dr.isLayerEnabled && !dr.isLayerEnabled()) {
+      dr.syncLayerUi();
+      return;
+    }
+
     if (action === 'open-main') {
       dr.state.panelView = 'main';
       dr.state.panelOpen = true;
@@ -93,6 +98,11 @@
     }
   };
 
+  dr.isLayerEnabled = function() {
+    if (!window.map || !dr.layerGroup) return true;
+    return window.map.hasLayer(dr.layerGroup);
+  };
+
   dr.createMiniControl = function() {
     if (!window.L || !window.map) return;
     if (dr.state.miniControl || document.getElementById(dr.DOM_IDS.miniControl)) return;
@@ -116,11 +126,41 @@
 
     dr.state.miniControl = new DrivingRouteControl();
     window.map.addControl(dr.state.miniControl);
+    dr.setMiniControlVisible(dr.isLayerEnabled());
+  };
+
+  dr.setMiniControlVisible = function(isVisible) {
+    var container = document.getElementById(dr.DOM_IDS.miniControl);
+    if (container) container.style.display = isVisible ? '' : 'none';
+  };
+
+  dr.removeMiniControl = function() {
+    if (dr.state.miniControl && window.map) {
+      try {
+        window.map.removeControl(dr.state.miniControl);
+      } catch (e) {
+        console.warn('Driving Route: unable to remove mini control', e);
+      }
+    }
+
+    dr.state.miniControl = null;
+
+    var container = document.getElementById(dr.DOM_IDS.miniControl);
+    if (container && container.parentNode) {
+      container.parentNode.removeChild(container);
+    }
   };
 
   dr.renderMiniControl = function() {
     var container = document.getElementById(dr.DOM_IDS.miniControl);
     if (!container) return;
+
+    if (!dr.isLayerEnabled()) {
+      dr.setMiniControlVisible(false);
+      return;
+    }
+
+    dr.setMiniControlVisible(true);
 
     var selectedIndex = dr.selectedStopIndex();
     var selectedInRoute = selectedIndex >= 0;
@@ -240,6 +280,7 @@
     link.textContent = 'Driving Route';
     link.addEventListener('click', function(ev) {
       ev.preventDefault();
+      if (!dr.isLayerEnabled()) return;
       dr.state.panelView = 'main';
       dr.state.panelOpen = true;
       dr.savePanelOpen();
@@ -248,6 +289,13 @@
 
     var toolbox = document.getElementById('toolbox');
     toolbox.appendChild(link);
+  };
+
+  dr.removeToolboxLink = function() {
+    var link = document.getElementById(dr.DOM_IDS.toolboxLink);
+    if (link && link.parentNode) {
+      link.parentNode.removeChild(link);
+    }
   };
 
   dr.injectCss = function() {
@@ -262,7 +310,7 @@
   dr.setupLayerControl = function() {
     if (dr.layerGroup) return;
 
-    dr.layerGroup = L.layerGroup();
+    dr.layerGroup = L.FeatureGroup ? new L.FeatureGroup() : L.layerGroup();
 
     if (typeof window.addLayerGroup === 'function') {
       window.addLayerGroup('Driving Route', dr.layerGroup, true);
@@ -272,16 +320,48 @@
     }
   };
 
+  dr.syncLayerUi = function() {
+    if (dr.isLayerEnabled()) {
+      dr.addToolboxLink();
+      dr.createMiniControl();
+      dr.setMiniControlVisible(true);
+      dr.renderMiniControl();
+      return;
+    }
+
+    dr.state.panelOpen = false;
+    dr.savePanelOpen();
+    dr.closeDialog();
+    dr.setMiniControlVisible(false);
+    dr.removeToolboxLink();
+  };
+
+  dr.enable = function() {
+    dr.addToolboxLink();
+    dr.createMiniControl();
+    dr.setMiniControlVisible(true);
+    dr.renderMiniControl();
+    dr.redrawLabels();
+  };
+
+  dr.disable = function() {
+    dr.state.panelOpen = false;
+    dr.savePanelOpen();
+    dr.closeDialog();
+    dr.setMiniControlVisible(false);
+    dr.removeToolboxLink();
+  };
+
   dr.setupLayerEvents = function() {
     if (dr.layerEventsRegistered) return;
     if (!window.map || !dr.layerGroup) return;
 
-    window.map.on('overlayadd', function(e) {
+    window.map.on('layeradd', function(e) {
       if (e.layer !== dr.layerGroup) return;
       dr.enable();
     });
 
-    window.map.on('overlayremove', function(e) {
+    window.map.on('layerremove', function(e) {
       if (e.layer !== dr.layerGroup) return;
       dr.disable();
     });
@@ -298,6 +378,7 @@
       dr.createMiniControl();
       dr.setupDialogEventHandlers();
       dr.addToolboxLink();
+      dr.syncLayerUi();
       dr.renderPanel();
       dr.renderMiniControl();
       dr.redrawLabels();

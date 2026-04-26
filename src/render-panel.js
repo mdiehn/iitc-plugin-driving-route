@@ -33,7 +33,7 @@
       html += '<td class="driving-route-wait-cell"><input class="driving-route-wait-input" type="text" inputmode="decimal" value="' + dr.escapeHtml(waitValue) + '" title="Examples: 15m, 1.5h, 2d" data-field="stop-minutes" data-index="' + index + '"></td>';
       html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Move up" data-action="move-stop-up" data-index="' + index + '" ' + (index === 0 ? 'disabled' : '') + '>&uarr;</button></td>';
       html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Move down" data-action="move-stop-down" data-index="' + index + '" ' + (index === stops.length - 1 ? 'disabled' : '') + '>&darr;</button></td>';
-      html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Remove waypoint" data-action="remove-stop" data-index="' + index + '">X</button></td>';
+      html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button driving-route-remove-stop-button" title="Remove waypoint" data-action="remove-stop" data-index="' + index + '">X</button></td>';
       html += '</tr>';
     });
 
@@ -107,6 +107,11 @@
   };
 
   dr.renderPanel = function() {
+    if (dr.isLayerEnabled && !dr.isLayerEnabled()) {
+      dr.closeDialog();
+      return;
+    }
+
     dr.renderMiniControl();
 
     if (!dr.state.panelOpen) {

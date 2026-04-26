@@ -1,8 +1,8 @@
 // ==UserScript==
 // @id             iitc-plugin-driving-route
-// @name           IITC plugin: Driving Route
+// @name           IITC plugin: Driving Route DEBUG
 // @category       Navigate
-// @version        0.1.0-dev
+// @version        0.1.2
 // @namespace      https://github.com/mdiehn/iitc-plugin-driving-route
 // @description    Mobile-first route planning through selected portals with segment drive times, stop-time accounting, and Google Maps export.
 // @include        https://intel.ingress.com/*
@@ -30,6 +30,9 @@ function wrapper(plugin_info) {
 }
 
 .driving-route-dialog-content {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   font-size: 11px;
   line-height: 1.25;
 }
@@ -72,6 +75,7 @@ function wrapper(plugin_info) {
 
 .driving-route-waypoints-table {
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
   margin: 6px 0 8px;
@@ -160,6 +164,10 @@ function wrapper(plugin_info) {
 
 .driving-route-row-button:disabled {
   opacity: 0.35;
+}
+
+.driving-route-remove-stop-button {
+  color: #ff8080 !important;
 }
 
 .driving-route-stop-num,
@@ -285,6 +293,7 @@ button.driving-route-waypoint-badge {
 }
 
 .ui-dialog.driving-route-dialog .ui-dialog-content {
+  box-sizing: border-box !important;
   overflow-x: hidden !important;
 }
 
@@ -311,22 +320,50 @@ button.driving-route-waypoint-name,
 
 @media (max-width: 640px) {
   .ui-dialog.driving-route-dialog {
+    --driving-route-iitc-bottom-bar-height: 34px;
+    --driving-route-mobile-bottom-gap: 6px;
     position: fixed !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(
+      var(--driving-route-iitc-bottom-bar-height) +
+      var(--driving-route-mobile-bottom-gap) +
+      env(safe-area-inset-bottom, 0px)
+    ) !important;
     top: auto !important;
     width: 100vw !important;
     max-width: 100vw !important;
-    max-height: calc(68dvh - env(safe-area-inset-bottom, 0px));
+    max-height: calc(
+      68dvh -
+      var(--driving-route-iitc-bottom-bar-height) -
+      var(--driving-route-mobile-bottom-gap) -
+      env(safe-area-inset-bottom, 0px)
+    );
   }
 
   .ui-dialog.driving-route-dialog .ui-dialog-content {
-    width: 100% !important;
-    max-height: calc(68dvh - 40px - env(safe-area-inset-bottom, 0px)) !important;
+    width: auto !important;
+    max-height: calc(
+      68dvh -
+      40px -
+      var(--driving-route-iitc-bottom-bar-height) -
+      var(--driving-route-mobile-bottom-gap) -
+      env(safe-area-inset-bottom, 0px)
+    ) !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .driving-route-row-action {
+    width: 26px;
+  }
+
+  .driving-route-row-button {
+    width: 24px;
+    min-width: 24px;
   }
 }
 `;
@@ -798,7 +835,7 @@ button.driving-route-waypoint-name,
       html += '<td class="driving-route-wait-cell"><input class="driving-route-wait-input" type="text" inputmode="decimal" value="' + dr.escapeHtml(waitValue) + '" title="Examples: 15m, 1.5h, 2d" data-field="stop-minutes" data-index="' + index + '"></td>';
       html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Move up" data-action="move-stop-up" data-index="' + index + '" ' + (index === 0 ? 'disabled' : '') + '>&uarr;</button></td>';
       html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Move down" data-action="move-stop-down" data-index="' + index + '" ' + (index === stops.length - 1 ? 'disabled' : '') + '>&darr;</button></td>';
-      html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Remove waypoint" data-action="remove-stop" data-index="' + index + '">X</button></td>';
+      html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button driving-route-remove-stop-button" title="Remove waypoint" data-action="remove-stop" data-index="' + index + '">X</button></td>';
       html += '</tr>';
     });
 
@@ -872,6 +909,11 @@ button.driving-route-waypoint-name,
   };
 
   dr.renderPanel = function() {
+    if (dr.isLayerEnabled && !dr.isLayerEnabled()) {
+      dr.closeDialog();
+      return;
+    }
+
     dr.renderMiniControl();
 
     if (!dr.state.panelOpen) {
@@ -1003,6 +1045,11 @@ button.driving-route-waypoint-name,
   };
 
   dr.handleAction = function(action, target) {
+    if (dr.isLayerEnabled && !dr.isLayerEnabled()) {
+      dr.syncLayerUi();
+      return;
+    }
+
     if (action === 'open-main') {
       dr.state.panelView = 'main';
       dr.state.panelOpen = true;
@@ -1040,6 +1087,11 @@ button.driving-route-waypoint-name,
     }
   };
 
+  dr.isLayerEnabled = function() {
+    if (!window.map || !dr.layerGroup) return true;
+    return window.map.hasLayer(dr.layerGroup);
+  };
+
   dr.createMiniControl = function() {
     if (!window.L || !window.map) return;
     if (dr.state.miniControl || document.getElementById(dr.DOM_IDS.miniControl)) return;
@@ -1063,11 +1115,41 @@ button.driving-route-waypoint-name,
 
     dr.state.miniControl = new DrivingRouteControl();
     window.map.addControl(dr.state.miniControl);
+    dr.setMiniControlVisible(dr.isLayerEnabled());
+  };
+
+  dr.setMiniControlVisible = function(isVisible) {
+    var container = document.getElementById(dr.DOM_IDS.miniControl);
+    if (container) container.style.display = isVisible ? '' : 'none';
+  };
+
+  dr.removeMiniControl = function() {
+    if (dr.state.miniControl && window.map) {
+      try {
+        window.map.removeControl(dr.state.miniControl);
+      } catch (e) {
+        console.warn('Driving Route: unable to remove mini control', e);
+      }
+    }
+
+    dr.state.miniControl = null;
+
+    var container = document.getElementById(dr.DOM_IDS.miniControl);
+    if (container && container.parentNode) {
+      container.parentNode.removeChild(container);
+    }
   };
 
   dr.renderMiniControl = function() {
     var container = document.getElementById(dr.DOM_IDS.miniControl);
     if (!container) return;
+
+    if (!dr.isLayerEnabled()) {
+      dr.setMiniControlVisible(false);
+      return;
+    }
+
+    dr.setMiniControlVisible(true);
 
     var selectedIndex = dr.selectedStopIndex();
     var selectedInRoute = selectedIndex >= 0;
@@ -1187,6 +1269,7 @@ button.driving-route-waypoint-name,
     link.textContent = 'Driving Route';
     link.addEventListener('click', function(ev) {
       ev.preventDefault();
+      if (!dr.isLayerEnabled()) return;
       dr.state.panelView = 'main';
       dr.state.panelOpen = true;
       dr.savePanelOpen();
@@ -1195,6 +1278,13 @@ button.driving-route-waypoint-name,
 
     var toolbox = document.getElementById('toolbox');
     toolbox.appendChild(link);
+  };
+
+  dr.removeToolboxLink = function() {
+    var link = document.getElementById(dr.DOM_IDS.toolboxLink);
+    if (link && link.parentNode) {
+      link.parentNode.removeChild(link);
+    }
   };
 
   dr.injectCss = function() {
@@ -1209,7 +1299,7 @@ button.driving-route-waypoint-name,
   dr.setupLayerControl = function() {
     if (dr.layerGroup) return;
 
-    dr.layerGroup = L.layerGroup();
+    dr.layerGroup = L.FeatureGroup ? new L.FeatureGroup() : L.layerGroup();
 
     if (typeof window.addLayerGroup === 'function') {
       window.addLayerGroup('Driving Route', dr.layerGroup, true);
@@ -1219,16 +1309,48 @@ button.driving-route-waypoint-name,
     }
   };
 
+  dr.syncLayerUi = function() {
+    if (dr.isLayerEnabled()) {
+      dr.addToolboxLink();
+      dr.createMiniControl();
+      dr.setMiniControlVisible(true);
+      dr.renderMiniControl();
+      return;
+    }
+
+    dr.state.panelOpen = false;
+    dr.savePanelOpen();
+    dr.closeDialog();
+    dr.setMiniControlVisible(false);
+    dr.removeToolboxLink();
+  };
+
+  dr.enable = function() {
+    dr.addToolboxLink();
+    dr.createMiniControl();
+    dr.setMiniControlVisible(true);
+    dr.renderMiniControl();
+    dr.redrawLabels();
+  };
+
+  dr.disable = function() {
+    dr.state.panelOpen = false;
+    dr.savePanelOpen();
+    dr.closeDialog();
+    dr.setMiniControlVisible(false);
+    dr.removeToolboxLink();
+  };
+
   dr.setupLayerEvents = function() {
     if (dr.layerEventsRegistered) return;
     if (!window.map || !dr.layerGroup) return;
 
-    window.map.on('overlayadd', function(e) {
+    window.map.on('layeradd', function(e) {
       if (e.layer !== dr.layerGroup) return;
       dr.enable();
     });
 
-    window.map.on('overlayremove', function(e) {
+    window.map.on('layerremove', function(e) {
       if (e.layer !== dr.layerGroup) return;
       dr.disable();
     });
@@ -1245,6 +1367,7 @@ button.driving-route-waypoint-name,
       dr.createMiniControl();
       dr.setupDialogEventHandlers();
       dr.addToolboxLink();
+      dr.syncLayerUi();
       dr.renderPanel();
       dr.renderMiniControl();
       dr.redrawLabels();
