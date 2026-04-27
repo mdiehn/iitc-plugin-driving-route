@@ -2,7 +2,7 @@
 // @id             iitc-plugin-driving-route
 // @name           IITC plugin: Driving Route
 // @category       Navigate
-// @version        0.1.1-dev
+// @version        0.2.0-dev
 // @namespace      https://github.com/mdiehn/iitc-plugin-driving-route
 // @updateURL      https://localhost:8443/iitc-plugin-driving-route.meta.js
 // @downloadURL    https://localhost:8443/iitc-plugin-driving-route.user.js
