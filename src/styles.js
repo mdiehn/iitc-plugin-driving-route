@@ -49,6 +49,14 @@
   width: 4.5em;
 }
 
+.driving-route-checkbox-setting {
+  align-items: center;
+}
+
+.driving-route-checkbox-setting input {
+  width: auto;
+}
+
 .driving-route-empty {
   margin: 8px 0 10px;
 }
@@ -286,6 +294,25 @@ button.driving-route-waypoint-badge {
 }
 
 .driving-route-stop-label span {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+}
+
+.driving-route-segment-time-label {
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.driving-route-segment-time-label span {
+  display: inline-block;
+  padding: 2px 5px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1.2;
+  white-space: nowrap;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
 }
 

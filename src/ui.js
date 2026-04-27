@@ -243,6 +243,13 @@
       if (!panel) return;
 
       var target = ev.target;
+      if (target && target.getAttribute('data-field') === 'show-segment-times-on-map') {
+        dr.state.settings.showSegmentTimesOnMap = !!target.checked;
+        dr.saveSettings();
+        dr.redrawSegmentTimeLabels();
+        return;
+      }
+
       if (target && target.getAttribute('data-field') === 'default-stop-minutes') {
         var value = dr.parseDurationMinutes(target.value);
         if (value === null) {

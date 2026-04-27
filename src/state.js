@@ -5,7 +5,8 @@
     settings: Object.assign({}, dr.DEFAULT_SETTINGS),
     layers: {
       labels: null,
-      routeLine: null
+      routeLine: null,
+      segmentLabels: null
     },
     panelOpen: false,
     panelView: 'main',

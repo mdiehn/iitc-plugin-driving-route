@@ -22,5 +22,6 @@
 
   dr.DEFAULT_SETTINGS = {
     defaultStopMinutes: 5,
-    includeReturnToStart: false
+    includeReturnToStart: false,
+    showSegmentTimesOnMap: false
   };

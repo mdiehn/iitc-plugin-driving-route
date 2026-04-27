@@ -71,6 +71,14 @@ function wrapper(plugin_info) {
   width: 4.5em;
 }
 
+.driving-route-checkbox-setting {
+  align-items: center;
+}
+
+.driving-route-checkbox-setting input {
+  width: auto;
+}
+
 .driving-route-empty {
   margin: 8px 0 10px;
 }
@@ -311,6 +319,25 @@ button.driving-route-waypoint-badge {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
 }
 
+.driving-route-segment-time-label {
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.driving-route-segment-time-label span {
+  display: inline-block;
+  padding: 2px 5px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+}
+
 .driving-route-stop-tooltip {
   font-size: 11px;
 }
@@ -429,7 +456,8 @@ button.driving-route-waypoint-name,
 
   dr.DEFAULT_SETTINGS = {
     defaultStopMinutes: 5,
-    includeReturnToStart: false
+    includeReturnToStart: false,
+    showSegmentTimesOnMap: false
   };
 
   dr.state = {
@@ -439,7 +467,8 @@ button.driving-route-waypoint-name,
     settings: Object.assign({}, dr.DEFAULT_SETTINGS),
     layers: {
       labels: null,
-      routeLine: null
+      routeLine: null,
+      segmentLabels: null
     },
     panelOpen: false,
     panelView: 'main',
@@ -772,6 +801,18 @@ button.driving-route-waypoint-name,
       var legs = route.legs.map(function(leg, index) {
         var fromStop = stops[index];
         var toStop = stops[index + 1];
+        var legPath = [];
+
+        if (leg.steps) {
+          leg.steps.forEach(function(step) {
+            if (step.path) {
+              step.path.forEach(function(point) {
+                legPath.push({ lat: point.lat(), lng: point.lng() });
+              });
+            }
+          });
+        }
+
         return {
           fromIndex: index,
           toIndex: index + 1,
@@ -780,7 +821,8 @@ button.driving-route-waypoint-name,
           distanceMeters: leg.distance ? leg.distance.value : 0,
           durationSeconds: leg.duration ? leg.duration.value : 0,
           distanceText: leg.distance ? leg.distance.text : '',
-          durationText: leg.duration ? leg.duration.text : ''
+          durationText: leg.duration ? leg.duration.text : '',
+          path: legPath
         };
       });
 
@@ -811,14 +853,26 @@ button.driving-route-waypoint-name,
   };
 
   dr.ensureLayers = function() {
+    var target = dr.routeOverlayTarget();
+
     if (!dr.state.layers.labels) {
-      dr.state.layers.labels = L.layerGroup().addTo(dr.routeOverlayTarget());
+      dr.state.layers.labels = L.layerGroup().addTo(target);
+    }
+
+    if (!dr.state.layers.segmentLabels) {
+      dr.state.layers.segmentLabels = L.layerGroup().addTo(target);
     }
   };
 
   dr.clearLabels = function() {
     if (dr.state.layers.labels) {
       dr.state.layers.labels.clearLayers();
+    }
+  };
+
+  dr.clearSegmentTimeLabels = function() {
+    if (dr.state.layers.segmentLabels) {
+      dr.state.layers.segmentLabels.clearLayers();
     }
   };
 
@@ -832,6 +886,8 @@ button.driving-route-waypoint-name,
       }
       dr.state.layers.routeLine = null;
     }
+
+    dr.clearSegmentTimeLabels();
   };
 
   dr.redrawLabels = function() {
@@ -866,6 +922,96 @@ button.driving-route-waypoint-name,
     });
   };
 
+  dr.toLatLng = function(point) {
+    if (!point) return null;
+    if (point.lat && typeof point.lat === 'function' && point.lng && typeof point.lng === 'function') {
+      return L.latLng(point.lat(), point.lng());
+    }
+    if (typeof point.lat === 'number' && typeof point.lng === 'number') {
+      return L.latLng(point.lat, point.lng);
+    }
+    return null;
+  };
+
+  dr.getPathMidpoint = function(path) {
+    if (!path || path.length === 0) return null;
+
+    var points = path.map(dr.toLatLng).filter(Boolean);
+    if (points.length === 0) return null;
+    if (points.length === 1) return points[0];
+
+    var total = 0;
+    for (var i = 1; i < points.length; i++) {
+      total += points[i - 1].distanceTo(points[i]);
+    }
+
+    if (!total) return points[Math.floor(points.length / 2)];
+
+    var halfway = total / 2;
+    var walked = 0;
+
+    for (var j = 1; j < points.length; j++) {
+      var from = points[j - 1];
+      var to = points[j];
+      var segment = from.distanceTo(to);
+
+      if (walked + segment >= halfway) {
+        var ratio = segment ? (halfway - walked) / segment : 0;
+        return L.latLng(
+          from.lat + (to.lat - from.lat) * ratio,
+          from.lng + (to.lng - from.lng) * ratio
+        );
+      }
+
+      walked += segment;
+    }
+
+    return points[Math.floor(points.length / 2)];
+  };
+
+  dr.getLegLabelLatLng = function(leg) {
+    var midpoint = dr.getPathMidpoint(leg && leg.path);
+    if (midpoint) return midpoint;
+
+    var fromStop = dr.state.stops[leg.fromIndex];
+    var toStop = dr.state.stops[leg.toIndex];
+    if (!fromStop || !toStop) return null;
+
+    return L.latLng(
+      (fromStop.lat + toStop.lat) / 2,
+      (fromStop.lng + toStop.lng) / 2
+    );
+  };
+
+  dr.redrawSegmentTimeLabels = function() {
+    if (!window.map || !window.L) return;
+    dr.ensureLayers();
+    dr.clearSegmentTimeLabels();
+
+    if (!dr.state.settings.showSegmentTimesOnMap) return;
+    if (!dr.state.route || !Array.isArray(dr.state.route.legs)) return;
+
+    dr.state.route.legs.forEach(function(leg) {
+      var latLng = dr.getLegLabelLatLng(leg);
+      if (!latLng) return;
+
+      var text = leg.durationText || dr.formatDuration(leg.durationSeconds);
+      var icon = L.divIcon({
+        className: 'driving-route-segment-time-label',
+        html: '<span>' + dr.escapeHtml(text) + '</span>',
+        iconSize: null,
+        iconAnchor: [16, 8]
+      });
+
+      L.marker(latLng, {
+        icon: icon,
+        interactive: false,
+        keyboard: false,
+        bubblingMouseEvents: false
+      }).addTo(dr.state.layers.segmentLabels);
+    });
+  };
+
   dr.drawRoutePath = function(path, options) {
     options = options || {};
     dr.clearRouteLine();
@@ -878,6 +1024,8 @@ button.driving-route-waypoint-name,
       interactive: false,
       bubblingMouseEvents: false
     }).addTo(dr.routeOverlayTarget());
+
+    dr.redrawSegmentTimeLabels();
 
     if (options.fitBounds === false) return;
 
@@ -974,6 +1122,8 @@ button.driving-route-waypoint-name,
     html += dr.renderStopsList(legsByToIndex);
 
     html += '<label class="driving-route-setting">Default stop time <input type="text" inputmode="decimal" value="' + dr.escapeHtml(dr.formatDurationInput(dr.state.settings.defaultStopMinutes)) + '" title="Examples: 15m, 1.5h, 2d" data-field="default-stop-minutes"> per portal</label>';
+
+    html += '<label class="driving-route-setting driving-route-checkbox-setting"><input type="checkbox" data-field="show-segment-times-on-map" ' + (dr.state.settings.showSegmentTimesOnMap ? 'checked ' : '') + '> Show segment times on map</label>';
 
     var plotLabel = dr.state.routeDirty ? 'Replot' : 'Plot';
 
@@ -1364,6 +1514,13 @@ button.driving-route-waypoint-name,
       if (!panel) return;
 
       var target = ev.target;
+      if (target && target.getAttribute('data-field') === 'show-segment-times-on-map') {
+        dr.state.settings.showSegmentTimesOnMap = !!target.checked;
+        dr.saveSettings();
+        dr.redrawSegmentTimeLabels();
+        return;
+      }
+
       if (target && target.getAttribute('data-field') === 'default-stop-minutes') {
         var value = dr.parseDurationMinutes(target.value);
         if (value === null) {

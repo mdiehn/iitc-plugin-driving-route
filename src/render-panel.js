@@ -74,6 +74,8 @@
 
     html += '<label class="driving-route-setting">Default stop time <input type="text" inputmode="decimal" value="' + dr.escapeHtml(dr.formatDurationInput(dr.state.settings.defaultStopMinutes)) + '" title="Examples: 15m, 1.5h, 2d" data-field="default-stop-minutes"> per portal</label>';
 
+    html += '<label class="driving-route-setting driving-route-checkbox-setting"><input type="checkbox" data-field="show-segment-times-on-map" ' + (dr.state.settings.showSegmentTimesOnMap ? 'checked ' : '') + '> Show segment times on map</label>';
+
     var plotLabel = dr.state.routeDirty ? 'Replot' : 'Plot';
 
     html += '<div class="driving-route-actions">';
