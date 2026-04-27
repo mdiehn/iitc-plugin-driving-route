@@ -2,8 +2,10 @@
 // @id             iitc-plugin-driving-route
 // @name           IITC plugin: Driving Route
 // @category       Navigate
-// @version        0.1.0-dev
+// @version        0.1.1-dev
 // @namespace      https://github.com/mdiehn/iitc-plugin-driving-route
+// @updateURL      https://localhost:8443/iitc-plugin-driving-route.meta.js
+// @downloadURL    https://localhost:8443/iitc-plugin-driving-route.user.js
 // @description    Mobile-first route planning through selected portals with segment drive times, stop-time accounting, and Google Maps export.
 // @include        https://intel.ingress.com/*
 // @include        http://intel.ingress.com/*
@@ -32,7 +34,7 @@ function wrapper(plugin_info) {
 .driving-route-dialog-content {
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: visible;
   font-size: 11px;
   line-height: 1.25;
 }
@@ -73,45 +75,57 @@ function wrapper(plugin_info) {
   margin: 8px 0 10px;
 }
 
-.driving-route-waypoints-table {
+.driving-route-waypoints-list {
+  display: block;
   width: 100%;
   max-width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
   margin: 6px 0 8px;
-  border: 0;
+  overflow: visible;
 }
 
-.driving-route-waypoints-table tr,
-.driving-route-waypoints-table td {
+.driving-route-waypoint-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 42px 22px 22px 22px;
+  gap: 2px;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: visible;
+}
+
+.driving-route-waypoint-row + .driving-route-waypoint-row {
+  margin-top: 2px;
+}
+
+.driving-route-waypoint-num,
+.driving-route-waypoint-name-cell,
+.driving-route-wait-cell,
+.driving-route-row-action {
+  min-width: 0;
   border: 0 !important;
   outline: 0 !important;
   background: transparent !important;
 }
 
-.driving-route-waypoints-table td {
-  padding: 2px 2px;
-  vertical-align: middle;
-}
-
 .driving-route-waypoint-num {
-  width: 22px;
+  width: 20px;
   text-align: center;
 }
 
 .driving-route-waypoint-name-cell {
-  width: auto;
-  min-width: 0;
+  overflow: hidden;
 }
 
 .driving-route-wait-cell {
-  width: 44px;
+  width: 42px;
   text-align: center;
 }
 
 .driving-route-row-action {
-  width: 23px;
+  width: 22px;
   text-align: center;
+  overflow: visible;
 }
 
 .driving-route-waypoint-name {
@@ -150,14 +164,17 @@ function wrapper(plugin_info) {
 }
 
 .driving-route-row-button {
-  width: 21px;
-  min-width: 21px;
-  padding: 1px 0;
+  width: 22px !important;
+  min-width: 22px !important;
+  max-width: 22px !important;
+  height: 20px;
+  min-height: 20px;
+  padding: 0 !important;
   border: 0 !important;
   background: transparent !important;
   color: inherit !important;
   text-align: center;
-  line-height: 1.2;
+  line-height: 20px;
   font-size: 14px !important;
   font-weight: bold !important;
 }
@@ -231,6 +248,13 @@ button.driving-route-waypoint-badge {
   opacity: 0.9;
 }
 
+.driving-route-version {
+  margin-top: 6px;
+  opacity: 0.7;
+  font-size: 10px;
+  text-align: right;
+}
+
 .driving-route-totals {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -294,13 +318,12 @@ button.driving-route-waypoint-badge {
 
 .ui-dialog.driving-route-dialog .ui-dialog-content {
   box-sizing: border-box !important;
-  overflow-x: hidden !important;
+  overflow-x: visible !important;
 }
 
-.driving-route-waypoints-table,
-.driving-route-waypoints-table tbody,
-.driving-route-waypoints-table tr,
-.driving-route-waypoints-table td,
+.driving-route-waypoints-list,
+.driving-route-waypoint-row,
+.driving-route-waypoint-row > div,
 .driving-route-waypoint-name-cell,
 .driving-route-waypoint-name-cell * {
   border-color: transparent !important;
@@ -320,57 +343,60 @@ button.driving-route-waypoint-name,
 
 @media (max-width: 640px) {
   .ui-dialog.driving-route-dialog {
-    --driving-route-iitc-bottom-bar-height: 34px;
-    --driving-route-mobile-bottom-gap: 6px;
     position: fixed !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: calc(
-      var(--driving-route-iitc-bottom-bar-height) +
-      var(--driving-route-mobile-bottom-gap) +
-      env(safe-area-inset-bottom, 0px)
-    ) !important;
-    top: auto !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    max-height: calc(
-      68dvh -
-      var(--driving-route-iitc-bottom-bar-height) -
-      var(--driving-route-mobile-bottom-gap) -
-      env(safe-area-inset-bottom, 0px)
-    );
+    left: 8px !important;
+    right: 8px !important;
+    top: 50% !important;
+    bottom: auto !important;
+    width: auto !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100dvh - 24px) !important;
+    transform: translateY(-50%) !important;
   }
 
   .ui-dialog.driving-route-dialog .ui-dialog-content {
     width: auto !important;
-    max-height: calc(
-      68dvh -
-      40px -
-      var(--driving-route-iitc-bottom-bar-height) -
-      var(--driving-route-mobile-bottom-gap) -
-      env(safe-area-inset-bottom, 0px)
-    ) !important;
+    max-height: calc(100dvh - 90px) !important;
     overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow-x: visible !important;
     padding-left: 8px !important;
     padding-right: 8px !important;
     padding-bottom: 8px !important;
   }
 
+  .driving-route-waypoint-row {
+    grid-template-columns: 18px minmax(0, 1fr) 38px 20px 20px 20px;
+    gap: 1px;
+  }
+
+  .driving-route-waypoint-num {
+    width: 18px;
+  }
+
+  .driving-route-wait-cell {
+    width: 38px;
+  }
+
+  .driving-route-wait-input {
+    width: 38px;
+  }
+
   .driving-route-row-action {
-    width: 26px;
+    width: 20px;
   }
 
   .driving-route-row-button {
-    width: 24px;
-    min-width: 24px;
+    width: 20px !important;
+    min-width: 20px !important;
+    max-width: 20px !important;
   }
 }
 `;
 
   dr.ID = 'driving-route';
   dr.NAME = 'Driving Route';
-  dr.VERSION = '0.1.0-dev';
+  dr.VERSION = '0.1.1-dev';
+  dr.SHOW_VERSION_IN_PANEL = true;
 
   dr.DOM_IDS = {
     css: 'iitc-plugin-driving-route-css',
@@ -818,29 +844,27 @@ button.driving-route-waypoint-name,
     if (stops.length === 0) return dr.renderEmptyHelp();
 
     var html = '';
-    html += '<table class="driving-route-waypoints-table">';
-    html += '<tbody>';
+    html += '<div class="driving-route-waypoints-list">';
 
     stops.forEach(function(stop, index) {
       var leg = legsByToIndex[index];
       var waitValue = dr.formatDurationInput(dr.getEffectiveStopMinutes(stop));
 
-      html += '<tr class="driving-route-waypoint-row" data-index="' + index + '">';
-      html += '<td class="driving-route-waypoint-num"><button type="button" class="driving-route-stop-num driving-route-waypoint-badge" title="Select and center portal" data-action="select-stop-center" data-index="' + index + '">' + (index + 1) + '</button></td>';
-      html += '<td class="driving-route-waypoint-name-cell"><button type="button" class="driving-route-waypoint-name" title="Select portal" data-action="select-stop" data-index="' + index + '">' + dr.escapeHtml(stop.title) + '</button>';
+      html += '<div class="driving-route-waypoint-row" data-index="' + index + '">';
+      html += '<div class="driving-route-waypoint-num"><button type="button" class="driving-route-stop-num driving-route-waypoint-badge" title="Select and center portal" data-action="select-stop-center" data-index="' + index + '">' + (index + 1) + '</button></div>';
+      html += '<div class="driving-route-waypoint-name-cell"><button type="button" class="driving-route-waypoint-name" title="Select portal" data-action="select-stop" data-index="' + index + '">' + dr.escapeHtml(stop.title) + '</button>';
       if (leg) {
         html += '<div class="driving-route-leg">' + dr.escapeHtml(leg.durationText || dr.formatDuration(leg.durationSeconds)) + ' · ' + dr.escapeHtml(leg.distanceText || dr.formatDistance(leg.distanceMeters)) + '</div>';
       }
-      html += '</td>';
-      html += '<td class="driving-route-wait-cell"><input class="driving-route-wait-input" type="text" inputmode="decimal" value="' + dr.escapeHtml(waitValue) + '" title="Examples: 15m, 1.5h, 2d" data-field="stop-minutes" data-index="' + index + '"></td>';
-      html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Move up" data-action="move-stop-up" data-index="' + index + '" ' + (index === 0 ? 'disabled' : '') + '>&uarr;</button></td>';
-      html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Move down" data-action="move-stop-down" data-index="' + index + '" ' + (index === stops.length - 1 ? 'disabled' : '') + '>&darr;</button></td>';
-      html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button driving-route-remove-stop-button" title="Remove waypoint" data-action="remove-stop" data-index="' + index + '">X</button></td>';
-      html += '</tr>';
+      html += '</div>';
+      html += '<div class="driving-route-wait-cell"><input class="driving-route-wait-input" type="text" inputmode="decimal" value="' + dr.escapeHtml(waitValue) + '" title="Examples: 15m, 1.5h, 2d" data-field="stop-minutes" data-index="' + index + '"></div>';
+      html += '<div class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Move up" data-action="move-stop-up" data-index="' + index + '" ' + (index === 0 ? 'disabled' : '') + '>&uarr;</button></div>';
+      html += '<div class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Move down" data-action="move-stop-down" data-index="' + index + '" ' + (index === stops.length - 1 ? 'disabled' : '') + '>&darr;</button></div>';
+      html += '<div class="driving-route-row-action"><button type="button" class="driving-route-row-button driving-route-remove-stop-button" title="Remove waypoint" data-action="remove-stop" data-index="' + index + '">X</button></div>';
+      html += '</div>';
     });
 
-    html += '</tbody>';
-    html += '</table>';
+    html += '</div>';
     return html;
   };
 
@@ -876,6 +900,9 @@ button.driving-route-waypoint-name,
 
     html += '<div class="driving-route-bottom-summary"><b>Waypoints:</b> ' + stops.length + '</div>';
     html += dr.renderTotals(dr.state.route);
+    if (dr.SHOW_VERSION_IN_PANEL) {
+      html += '<div class="driving-route-version">Driving Route ' + dr.escapeHtml(dr.VERSION) + '</div>';
+    }
 
     html += '<div class="driving-route-message" id="driving-route-message"></div>';
     html += '</div>';
@@ -1375,6 +1402,10 @@ button.driving-route-waypoint-name,
 
   dr.setup = function() {
     try {
+      if (plugin_info && plugin_info.script && plugin_info.script.version) {
+        dr.VERSION = plugin_info.script.version;
+      }
+
       dr.injectCss();
       dr.loadState();
       dr.setupLayerControl();

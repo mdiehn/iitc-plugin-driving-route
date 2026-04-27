@@ -12,7 +12,7 @@
 .driving-route-dialog-content {
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: visible;
   font-size: 11px;
   line-height: 1.25;
 }
@@ -53,45 +53,57 @@
   margin: 8px 0 10px;
 }
 
-.driving-route-waypoints-table {
+.driving-route-waypoints-list {
+  display: block;
   width: 100%;
   max-width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
   margin: 6px 0 8px;
-  border: 0;
+  overflow: visible;
 }
 
-.driving-route-waypoints-table tr,
-.driving-route-waypoints-table td {
+.driving-route-waypoint-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 42px 22px 22px 22px;
+  gap: 2px;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: visible;
+}
+
+.driving-route-waypoint-row + .driving-route-waypoint-row {
+  margin-top: 2px;
+}
+
+.driving-route-waypoint-num,
+.driving-route-waypoint-name-cell,
+.driving-route-wait-cell,
+.driving-route-row-action {
+  min-width: 0;
   border: 0 !important;
   outline: 0 !important;
   background: transparent !important;
 }
 
-.driving-route-waypoints-table td {
-  padding: 2px 2px;
-  vertical-align: middle;
-}
-
 .driving-route-waypoint-num {
-  width: 22px;
+  width: 20px;
   text-align: center;
 }
 
 .driving-route-waypoint-name-cell {
-  width: auto;
-  min-width: 0;
+  overflow: hidden;
 }
 
 .driving-route-wait-cell {
-  width: 44px;
+  width: 42px;
   text-align: center;
 }
 
 .driving-route-row-action {
-  width: 23px;
+  width: 22px;
   text-align: center;
+  overflow: visible;
 }
 
 .driving-route-waypoint-name {
@@ -130,14 +142,17 @@
 }
 
 .driving-route-row-button {
-  width: 21px;
-  min-width: 21px;
-  padding: 1px 0;
+  width: 22px !important;
+  min-width: 22px !important;
+  max-width: 22px !important;
+  height: 20px;
+  min-height: 20px;
+  padding: 0 !important;
   border: 0 !important;
   background: transparent !important;
   color: inherit !important;
   text-align: center;
-  line-height: 1.2;
+  line-height: 20px;
   font-size: 14px !important;
   font-weight: bold !important;
 }
@@ -212,8 +227,8 @@ button.driving-route-waypoint-badge {
 }
 
 .driving-route-version {
-  margin-top: 8px;
-  opacity: 0.65;
+  margin-top: 6px;
+  opacity: 0.7;
   font-size: 10px;
   text-align: right;
 }
@@ -281,13 +296,12 @@ button.driving-route-waypoint-badge {
 
 .ui-dialog.driving-route-dialog .ui-dialog-content {
   box-sizing: border-box !important;
-  overflow-x: hidden !important;
+  overflow-x: visible !important;
 }
 
-.driving-route-waypoints-table,
-.driving-route-waypoints-table tbody,
-.driving-route-waypoints-table tr,
-.driving-route-waypoints-table td,
+.driving-route-waypoints-list,
+.driving-route-waypoint-row,
+.driving-route-waypoint-row > div,
 .driving-route-waypoint-name-cell,
 .driving-route-waypoint-name-cell * {
   border-color: transparent !important;
@@ -307,50 +321,52 @@ button.driving-route-waypoint-name,
 
 @media (max-width: 640px) {
   .ui-dialog.driving-route-dialog {
-    --driving-route-iitc-bottom-bar-height: 34px;
-    --driving-route-mobile-bottom-gap: 6px;
     position: fixed !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: calc(
-      var(--driving-route-iitc-bottom-bar-height) +
-      var(--driving-route-mobile-bottom-gap) +
-      env(safe-area-inset-bottom, 0px)
-    ) !important;
-    top: auto !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    max-height: calc(
-      68dvh -
-      var(--driving-route-iitc-bottom-bar-height) -
-      var(--driving-route-mobile-bottom-gap) -
-      env(safe-area-inset-bottom, 0px)
-    );
+    left: 8px !important;
+    right: 8px !important;
+    top: 50% !important;
+    bottom: auto !important;
+    width: auto !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100dvh - 24px) !important;
+    transform: translateY(-50%) !important;
   }
 
   .ui-dialog.driving-route-dialog .ui-dialog-content {
     width: auto !important;
-    max-height: calc(
-      68dvh -
-      40px -
-      var(--driving-route-iitc-bottom-bar-height) -
-      var(--driving-route-mobile-bottom-gap) -
-      env(safe-area-inset-bottom, 0px)
-    ) !important;
+    max-height: calc(100dvh - 90px) !important;
     overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow-x: visible !important;
     padding-left: 8px !important;
     padding-right: 8px !important;
     padding-bottom: 8px !important;
   }
 
+  .driving-route-waypoint-row {
+    grid-template-columns: 18px minmax(0, 1fr) 38px 20px 20px 20px;
+    gap: 1px;
+  }
+
+  .driving-route-waypoint-num {
+    width: 18px;
+  }
+
+  .driving-route-wait-cell {
+    width: 38px;
+  }
+
+  .driving-route-wait-input {
+    width: 38px;
+  }
+
   .driving-route-row-action {
-    width: 26px;
+    width: 20px;
   }
 
   .driving-route-row-button {
-    width: 24px;
-    min-width: 24px;
+    width: 20px !important;
+    min-width: 20px !important;
+    max-width: 20px !important;
   }
 }
 `;

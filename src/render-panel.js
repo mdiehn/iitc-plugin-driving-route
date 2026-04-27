@@ -16,29 +16,27 @@
     if (stops.length === 0) return dr.renderEmptyHelp();
 
     var html = '';
-    html += '<table class="driving-route-waypoints-table">';
-    html += '<tbody>';
+    html += '<div class="driving-route-waypoints-list">';
 
     stops.forEach(function(stop, index) {
       var leg = legsByToIndex[index];
       var waitValue = dr.formatDurationInput(dr.getEffectiveStopMinutes(stop));
 
-      html += '<tr class="driving-route-waypoint-row" data-index="' + index + '">';
-      html += '<td class="driving-route-waypoint-num"><button type="button" class="driving-route-stop-num driving-route-waypoint-badge" title="Select and center portal" data-action="select-stop-center" data-index="' + index + '">' + (index + 1) + '</button></td>';
-      html += '<td class="driving-route-waypoint-name-cell"><button type="button" class="driving-route-waypoint-name" title="Select portal" data-action="select-stop" data-index="' + index + '">' + dr.escapeHtml(stop.title) + '</button>';
+      html += '<div class="driving-route-waypoint-row" data-index="' + index + '">';
+      html += '<div class="driving-route-waypoint-num"><button type="button" class="driving-route-stop-num driving-route-waypoint-badge" title="Select and center portal" data-action="select-stop-center" data-index="' + index + '">' + (index + 1) + '</button></div>';
+      html += '<div class="driving-route-waypoint-name-cell"><button type="button" class="driving-route-waypoint-name" title="Select portal" data-action="select-stop" data-index="' + index + '">' + dr.escapeHtml(stop.title) + '</button>';
       if (leg) {
         html += '<div class="driving-route-leg">' + dr.escapeHtml(leg.durationText || dr.formatDuration(leg.durationSeconds)) + ' · ' + dr.escapeHtml(leg.distanceText || dr.formatDistance(leg.distanceMeters)) + '</div>';
       }
-      html += '</td>';
-      html += '<td class="driving-route-wait-cell"><input class="driving-route-wait-input" type="text" inputmode="decimal" value="' + dr.escapeHtml(waitValue) + '" title="Examples: 15m, 1.5h, 2d" data-field="stop-minutes" data-index="' + index + '"></td>';
-      html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Move up" data-action="move-stop-up" data-index="' + index + '" ' + (index === 0 ? 'disabled' : '') + '>&uarr;</button></td>';
-      html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Move down" data-action="move-stop-down" data-index="' + index + '" ' + (index === stops.length - 1 ? 'disabled' : '') + '>&darr;</button></td>';
-      html += '<td class="driving-route-row-action"><button type="button" class="driving-route-row-button driving-route-remove-stop-button" title="Remove waypoint" data-action="remove-stop" data-index="' + index + '">X</button></td>';
-      html += '</tr>';
+      html += '</div>';
+      html += '<div class="driving-route-wait-cell"><input class="driving-route-wait-input" type="text" inputmode="decimal" value="' + dr.escapeHtml(waitValue) + '" title="Examples: 15m, 1.5h, 2d" data-field="stop-minutes" data-index="' + index + '"></div>';
+      html += '<div class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Move up" data-action="move-stop-up" data-index="' + index + '" ' + (index === 0 ? 'disabled' : '') + '>&uarr;</button></div>';
+      html += '<div class="driving-route-row-action"><button type="button" class="driving-route-row-button" title="Move down" data-action="move-stop-down" data-index="' + index + '" ' + (index === stops.length - 1 ? 'disabled' : '') + '>&darr;</button></div>';
+      html += '<div class="driving-route-row-action"><button type="button" class="driving-route-row-button driving-route-remove-stop-button" title="Remove waypoint" data-action="remove-stop" data-index="' + index + '">X</button></div>';
+      html += '</div>';
     });
 
-    html += '</tbody>';
-    html += '</table>';
+    html += '</div>';
     return html;
   };
 
