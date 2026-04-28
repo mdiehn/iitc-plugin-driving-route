@@ -56,7 +56,7 @@ Observed Google Maps behavior:
 - That means 11 total route points.
 - With more than 11 total points, Google Maps may omit stops between the ninth intermediate stop and the final destination.
 
-The plugin should eventually warn users or split exports when the route exceeds this limit.
+The plugin currently warns before opening Google Maps when the route exceeds this limit and lists the stops that Google Maps may omit. Route splitting is deferred.
 
 ## Related plugins
 

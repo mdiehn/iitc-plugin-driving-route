@@ -58,15 +58,20 @@ Hover labels are still limited on mobile because touch devices do not have a rel
 
 Google Maps appears to support the first point, final point, and up to 9 intermediate stops. Routes with more than 11 total points may export incompletely.
 
-Possible fixes:
+Current behavior:
 
-- warn users when exporting more than 11 points
+- warn before opening Google Maps when exporting more than 11 points
+- list the stops Google Maps may omit
+- allow the user to cancel or continue anyway
+
+Possible future fixes:
+
 - split large routes into multiple Google Maps links
 - offer a copied list of stops as a fallback
 
 ## Planned improvements
 
-- Clearer handling for Google Maps export limits.
+- Route splitting for Google Maps export limits.
 - Better handling for routes that cannot be calculated.
 - Better release tracking docs and checklist.
 

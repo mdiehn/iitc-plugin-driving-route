@@ -17,6 +17,7 @@ This project does not have a formal public release yet. The current working mile
 - Segment detail display between the two waypoint rows for that route leg.
 - Optional map labels for per-segment drive times.
 - Google Maps export for the current waypoint route.
+- Warning before Google Maps export when routes exceed the observed 11-point limit, including the stops that may be omitted.
 - Development version display in the panel.
 - Meta-file generation during build.
 
@@ -41,6 +42,7 @@ This project does not have a formal public release yet. The current working mile
 - Hover labels still do not behave especially well on mobile.
 - Panel bottom anchoring near IITC mobile nav/status areas may still need refinement.
 - Route persistence restores saved data but does not automatically recalculate directions on reload.
+- Google Maps export may omit stops after the ninth intermediate stop when routes exceed 11 total points.
 
 ## 0.1.x - Early development
 

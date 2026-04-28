@@ -33,7 +33,7 @@ This project is still in active development. The current code is usable enough f
 
 Google Maps appears to plot the first point, final point, and up to 9 intermediate stops. That means routes with more than 11 total points may export incompletely.
 
-Portal Route warns before opening Google Maps with more than 11 route points. Better route splitting is planned for later.
+Portal Route warns before opening Google Maps with more than 11 route points and lists the stops Google Maps may omit. Better route splitting is planned for later.
 
 ### Mobile hover behavior
 
@@ -42,9 +42,6 @@ Hover labels are limited on mobile because touch devices do not have a reliable 
 ## Repository layout
 
 ```text
-build/
-  build.sh
-
 dist/
   portal-route.meta.js
   portal-route.user.js
@@ -81,7 +78,13 @@ package.json
 From the repository root:
 
 ```bash
-./build.sh
+npm run build
+```
+
+Or directly:
+
+```bash
+node build.js
 ```
 
 The built userscript and metadata file are written to:

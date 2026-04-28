@@ -46,7 +46,7 @@ Later phases may add:
 - better naming for non-portal points
 - saved named routes
 - Apple Maps and Waze links
-- route splitting for external-map export limits
+- clearer warnings and route splitting for external-map export limits
 - IITC Sync support or import/export
 - turn-by-turn directions inside IITC
 
