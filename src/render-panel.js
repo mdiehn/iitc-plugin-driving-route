@@ -82,6 +82,9 @@
     html += '<button type="button" data-action="add-selected-stop">Add</button>';
     html += '<button type="button" data-action="calculate-route">' + plotLabel + '</button>';
     html += '<button type="button" data-action="open-google-maps">Open Maps</button>';
+    html += '<button type="button" data-action="export-route-json">Export</button>';
+    html += '<button type="button" data-action="import-route-json">Import</button>';
+    html += '<button type="button" data-action="print-route">Print</button>';
     html += '<button type="button" data-action="clear-route">Clear</button>';
     html += '<button type="button" data-action="close-panel">Close</button>';
     html += '</div>';

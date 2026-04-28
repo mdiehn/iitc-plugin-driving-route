@@ -93,6 +93,12 @@
       pr.calculateRoute();
     } else if (action === 'open-google-maps') {
       pr.openGoogleMaps();
+    } else if (action === 'export-route-json') {
+      pr.exportRouteJson();
+    } else if (action === 'import-route-json') {
+      pr.importRouteJson();
+    } else if (action === 'print-route') {
+      pr.printRoute();
     } else if (action === 'clear-route') {
       pr.clearStops();
     }
