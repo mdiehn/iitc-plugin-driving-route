@@ -1,8 +1,8 @@
-# IITC Driving Route Plugin - Phase 1 Design
+# IITC Portal Route Plugin - Phase 1 Design
 
 ## Purpose
 
-`iitc-plugin-driving-route` helps an IITC user plan a driving route through selected portals.
+`iitc-plugin-portal-route` helps an IITC user plan a route through selected portals.
 
 Phase 1 is a mobile-first manual route planner. It is meant to make route planning usable directly from IITC without trying to become a full navigation app.
 
@@ -11,7 +11,7 @@ Phase 1 is a mobile-first manual route planner. It is meant to make route planni
 - Add portals to an ordered route from the portal details panel.
 - Show a collapsible mobile-friendly route panel.
 - Label portals on the map by route order.
-- Calculate a driving route through selected portals.
+- Calculate a route through selected portals.
 - Show drive time and distance for each route segment.
 - Show total drive time, stop time, trip time, and distance.
 - Support a global default stop-time setting, defaulting to 5 minutes.

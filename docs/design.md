@@ -1,12 +1,12 @@
-# IITC Driving Route Plugin Design
+# IITC Portal Route Plugin Design
 
 ## Overview
 
-`iitc-plugin-driving-route` is a mobile-first IITC plugin for planning driving routes through selected portals.
+`iitc-plugin-portal-route` is a mobile-first IITC plugin for planning routes through selected portals.
 
 The plugin is intended to help users:
 
-- add portals to an ordered driving route
+- add portals to an ordered route
 - label stops on the map
 - show drive time and distance for each segment
 - include expected stop time at each portal
@@ -29,7 +29,7 @@ Phase 1 focuses on a practical manual route planner:
 - add portals to a route
 - preserve manual order
 - label stops on the map
-- calculate driving route
+- calculate route
 - show per-leg drive time and distance
 - show total drive time, stop time, trip time, and distance
 - support per-stop wait time

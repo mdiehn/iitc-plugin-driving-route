@@ -1,18 +1,18 @@
 {
-  "name": "iitc-plugin-driving-route",
-  "version": "0.1.0",
-  "description": "Mobile-first IITC plugin for planning driving routes through selected portals.",
+  "name": "iitc-plugin-portal-route",
+  "version": "0.2.0-dev",
+  "description": "IITC plugin for planning routes through selected portals.",
   "private": true,
   "scripts": {
     "build": "node build.js",
-    "check": "node --check dist/driving-route.user.js",
+    "check": "node --check dist/portal-route.user.js",
     "test": "npm run build && npm run check"
   },
   "keywords": [
     "iitc",
     "ingress",
     "plugin",
-    "driving",
+    "portal",
     "route"
   ],
   "author": "Mike Diehn",

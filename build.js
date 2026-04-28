@@ -5,7 +5,7 @@ const path = require("path");
 
 const root = path.resolve(__dirname);
 const distDir = path.join(root, "dist");
-const outFile = path.join(distDir, "driving-route.user.js");
+const outFile = path.join(distDir, "portal-route.user.js");
 
 const sources = [
   "src/banner.js",
@@ -40,7 +40,7 @@ const output = sources
 
 fs.writeFileSync(outFile, output, "utf8");
 
-const metaFile = path.join(distDir, "driving-route.meta.js");
+const metaFile = path.join(distDir, "portal-route.meta.js");
 
 const metaMatch = output.match(
   /\/\/ ==UserScript==[\s\S]*?\/\/ ==\/UserScript==/

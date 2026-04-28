@@ -1,6 +1,6 @@
 # Usability Notes
 
-This document tracks practical UI/UX issues found while building and testing `iitc-plugin-driving-route`.
+This document tracks practical UI/UX issues found while building and testing `iitc-plugin-portal-route`.
 
 ## Fixed issues
 

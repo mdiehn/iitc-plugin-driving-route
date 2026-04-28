@@ -1,37 +1,43 @@
-# IITC Driving Route
+# IITC plugin: Portal Route
 
-Mobile-first IITC plugin for planning a driving route through selected portals.
+Portal Route is an IITC plugin for planning a route through selected Ingress portals.
 
-The plugin is intended to help agents build a portal route, show the route order on the map, estimate drive time for each segment, include expected stop time at portals, and open the route in an external navigation app.
+The plugin is being built for mobile-first use, but it also works on desktop IITC. It focuses on selecting portals as stops, plotting the route, tracking stop time, showing route and segment timing, and exporting the waypoint route to Google Maps.
 
-## Status
+## Current status
 
-Early first-pass implementation.
+Current milestone: `0.2.0-dev`
 
-Phase 1 is focused on a manual route planner:
+This project is still in active development. The current code is usable enough for local testing and early public review, but it should still be treated as a development build.
 
-- add portals to a route
-- preserve manual route order
-- label stops on the map
-- calculate a driving route
-- show per-leg drive time and distance
-- show total drive time, stop time, trip time, and distance
-- open the route in Google Maps
+## Main features
 
-Route optimization, saved routes, per-portal stop-time overrides, and in-plugin turn-by-turn directions are deferred.
+- Add selected portals as route waypoints.
+- Edit waypoints in the main route panel.
+- Remove and reorder waypoint stops.
+- Set a default stop time per portal.
+- Override stop time per waypoint.
+- Accept flexible stop-time input like `15m`, `1.5h`, and `2d`.
+- Plot a route through the waypoint list.
+- Show total route time, stop time, trip time, and distance.
+- Show route leg details between the two waypoint rows they describe.
+- Mark route state stale after route-affecting edits.
+- Show Replot when the saved route needs recalculation.
+- Persist waypoints and plotted route data across IITC reloads.
+- Optionally show per-segment drive-time labels on the map.
+- Export the waypoint route to Google Maps.
 
-## Mobile-first design
+## Known limitations
 
-IITC Mobile support is a high priority.
+### Google Maps waypoint limit
 
-The UI avoids:
+Google Maps appears to plot the first point, final point, and up to 9 intermediate stops. That means routes with more than 11 total points may export incompletely.
 
-- hover-only controls
-- tiny buttons
-- wide tables
-- drag-and-drop-only behavior
+Portal Route warns before opening Google Maps with more than 11 route points. Better route splitting is planned for later.
 
-The route panel uses stacked rows/cards so it works better on phones.
+### Mobile hover behavior
+
+Hover labels are limited on mobile because touch devices do not have a reliable hover state.
 
 ## Repository layout
 
@@ -40,11 +46,13 @@ build/
   build.sh
 
 dist/
-  driving-route.user.js
+  portal-route.meta.js
+  portal-route.user.js
 
 docs/
   design.md
   design-phase-1.md
+  usability-notes.md
 
 src/
   banner.js
@@ -61,6 +69,11 @@ src/
   export-links.js
   ui.js
   wrapper-end.js
+
+CHANGELOG.md
+README.md
+VERSION
+package.json
 ```
 
 ## Building
@@ -68,96 +81,76 @@ src/
 From the repository root:
 
 ```bash
-bash build/build.sh
+./build.sh
 ```
 
-The built userscript is written to:
+The built userscript and metadata file are written to:
 
 ```text
-dist/driving-route.user.js
+dist/portal-route.user.js
+dist/portal-route.meta.js
 ```
 
 Optional syntax check:
 
 ```bash
-node --check dist/driving-route.user.js
+node --check dist/portal-route.user.js
+```
+
+If using npm:
+
+```bash
+npm run build
+npm run check
 ```
 
 ## Installing for testing
 
-Use the raw URL for `dist/driving-route.user.js` after pushing to GitHub, or load the built file directly into your userscript manager.
-
-For local development, a separate dev-loader userscript may be useful later, but this first pass assumes a normal built userscript.
-
-## Phase 1 features
-
-### Route panel
-
-The plugin adds a collapsible route panel with:
-
-- stop count
-- default stop-time setting
-- ordered stop list
-- route totals
-- calculate route button
-- Google Maps button
-- clear route button
-
-### Portal action
-
-Portal details should include:
+Install the built userscript from the raw GitHub URL:
 
 ```text
-Add to Driving Route
+https://raw.githubusercontent.com/mdiehn/iitc-plugin-portal-route/main/dist/portal-route.user.js
 ```
 
-The selected portal is appended to the current route.
+Or load `dist/portal-route.user.js` directly into your userscript manager while testing local builds.
 
-### Stop labels
+## Development notes
 
-Each portal in the route gets a numbered map label using a Leaflet `L.divIcon()` marker.
+The userscript is built by concatenating files from `src/`. Source changes should be made in `src/`; generated files in `dist/` should be treated as build output.
 
-### Driving route
+The current version is stored in:
 
-The plugin attempts to use Google Maps Directions support when available in IITC.
+```text
+VERSION
+```
 
-The route result is normalized into internal leg data containing:
+The userscript metadata version is stored in:
 
-- source stop
-- destination stop
-- distance
-- drive time
+```text
+src/banner.js
+```
 
-### Stop time
+For now, keep those in sync manually.
 
-The default stop time is 5 minutes per portal.
+Design notes and the active roadmap are tracked in:
 
-This is editable from the panel and stored locally.
+```text
+docs/design.md
+docs/usability-notes.md
+```
 
-### External navigation
+Changes by milestone are tracked in:
 
-The plugin can create a Google Maps directions URL using the current route order.
-
-Long routes may exceed external navigation waypoint limits. Better splitting and warnings are planned for later versions.
+```text
+CHANGELOG.md
+```
 
 ## Design docs
 
 - [Design overview](docs/design.md)
 - [Phase 1 design](docs/design-phase-1.md)
-
-## Development notes
-
-Phase 1 intentionally keeps behavior simple:
-
-- manual order only
-- one global stop-time value
-- no route optimization
-- no saved named routes
-- no per-portal stop-time overrides
-- no turn-by-turn directions inside IITC
-
-This keeps the first usable version smaller and easier to test on IITC Mobile.
+- [Usability notes](docs/usability-notes.md)
 
 ## Credits
 
-This plugin is a separate implementation inspired in part by the IITC Traveling Agent plugin by yavidor.
+This plugin is a separate implementation inspired in part by the IITC Traveling Agent plugin by yavidor and the Map Route Planner plugin.
