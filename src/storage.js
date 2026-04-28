@@ -1,55 +1,55 @@
-  dr.loadState = function() {
+  pr.loadState = function() {
     try {
-      var rawSettings = localStorage.getItem(dr.STORAGE_KEYS.settings);
+      var rawSettings = localStorage.getItem(pr.STORAGE_KEYS.settings);
       if (rawSettings) {
-        dr.state.settings = Object.assign({}, dr.DEFAULT_SETTINGS, JSON.parse(rawSettings));
+        pr.state.settings = Object.assign({}, pr.DEFAULT_SETTINGS, JSON.parse(rawSettings));
       }
 
-      var rawStops = localStorage.getItem(dr.STORAGE_KEYS.stops);
+      var rawStops = localStorage.getItem(pr.STORAGE_KEYS.stops);
       if (rawStops) {
         var stops = JSON.parse(rawStops);
-        if (Array.isArray(stops)) dr.state.stops = stops;
+        if (Array.isArray(stops)) pr.state.stops = stops;
       }
 
-      var rawPanelOpen = localStorage.getItem(dr.STORAGE_KEYS.panelOpen);
-      if (rawPanelOpen !== null) dr.state.panelOpen = rawPanelOpen === 'true';
+      var rawPanelOpen = localStorage.getItem(pr.STORAGE_KEYS.panelOpen);
+      if (rawPanelOpen !== null) pr.state.panelOpen = rawPanelOpen === 'true';
 
-      var rawRoute = localStorage.getItem(dr.STORAGE_KEYS.route);
+      var rawRoute = localStorage.getItem(pr.STORAGE_KEYS.route);
       if (rawRoute) {
         var route = JSON.parse(rawRoute);
-        if (route && Array.isArray(route.legs)) dr.state.route = route;
+        if (route && Array.isArray(route.legs)) pr.state.route = route;
       }
 
-      var rawRouteDirty = localStorage.getItem(dr.STORAGE_KEYS.routeDirty);
-      if (rawRouteDirty !== null) dr.state.routeDirty = rawRouteDirty === 'true';
+      var rawRouteDirty = localStorage.getItem(pr.STORAGE_KEYS.routeDirty);
+      if (rawRouteDirty !== null) pr.state.routeDirty = rawRouteDirty === 'true';
     } catch (e) {
-      console.warn('Driving Route: failed to load saved state', e);
+      console.warn('Portal Route: failed to load saved state', e);
     }
   };
 
-  dr.saveSettings = function() {
-    localStorage.setItem(dr.STORAGE_KEYS.settings, JSON.stringify(dr.state.settings));
+  pr.saveSettings = function() {
+    localStorage.setItem(pr.STORAGE_KEYS.settings, JSON.stringify(pr.state.settings));
   };
 
-  dr.saveStops = function() {
-    localStorage.setItem(dr.STORAGE_KEYS.stops, JSON.stringify(dr.state.stops));
+  pr.saveStops = function() {
+    localStorage.setItem(pr.STORAGE_KEYS.stops, JSON.stringify(pr.state.stops));
   };
 
-  dr.savePanelOpen = function() {
-    localStorage.setItem(dr.STORAGE_KEYS.panelOpen, String(dr.state.panelOpen));
+  pr.savePanelOpen = function() {
+    localStorage.setItem(pr.STORAGE_KEYS.panelOpen, String(pr.state.panelOpen));
   };
 
 
-  dr.saveRoute = function() {
-    if (dr.state.route) {
-      localStorage.setItem(dr.STORAGE_KEYS.route, JSON.stringify(dr.state.route));
+  pr.saveRoute = function() {
+    if (pr.state.route) {
+      localStorage.setItem(pr.STORAGE_KEYS.route, JSON.stringify(pr.state.route));
     } else {
-      localStorage.removeItem(dr.STORAGE_KEYS.route);
+      localStorage.removeItem(pr.STORAGE_KEYS.route);
     }
-    localStorage.setItem(dr.STORAGE_KEYS.routeDirty, String(!!dr.state.routeDirty));
+    localStorage.setItem(pr.STORAGE_KEYS.routeDirty, String(!!pr.state.routeDirty));
   };
 
-  dr.clearSavedRoute = function() {
-    localStorage.removeItem(dr.STORAGE_KEYS.route);
-    localStorage.removeItem(dr.STORAGE_KEYS.routeDirty);
+  pr.clearSavedRoute = function() {
+    localStorage.removeItem(pr.STORAGE_KEYS.route);
+    localStorage.removeItem(pr.STORAGE_KEYS.routeDirty);
   };

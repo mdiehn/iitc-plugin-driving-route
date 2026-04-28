@@ -1,5 +1,5 @@
 
-  var setup = dr.setup;
+  var setup = pr.setup;
 
   setup.info = plugin_info;
   if (!window.bootPlugins) window.bootPlugins = [];

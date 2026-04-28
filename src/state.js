@@ -1,8 +1,8 @@
-  dr.state = {
+  pr.state = {
     stops: [],
     route: null,
     routeDirty: false,
-    settings: Object.assign({}, dr.DEFAULT_SETTINGS),
+    settings: Object.assign({}, pr.DEFAULT_SETTINGS),
     layers: {
       labels: null,
       routeLine: null,
@@ -13,9 +13,9 @@
     miniControl: null
   };
 
-  dr.getEffectiveStopMinutes = function(stop) {
+  pr.getEffectiveStopMinutes = function(stop) {
     if (stop && typeof stop.stopMinutes === 'number' && !Number.isNaN(stop.stopMinutes)) {
       return stop.stopMinutes;
     }
-    return dr.state.settings.defaultStopMinutes;
+    return pr.state.settings.defaultStopMinutes;
   };

@@ -1,54 +1,54 @@
-  dr.routeOverlayTarget = function() {
-    if (dr.layerGroup) return dr.layerGroup;
+  pr.routeOverlayTarget = function() {
+    if (pr.layerGroup) return pr.layerGroup;
     return window.map;
   };
 
-  dr.ensureLayers = function() {
-    var target = dr.routeOverlayTarget();
+  pr.ensureLayers = function() {
+    var target = pr.routeOverlayTarget();
 
-    if (!dr.state.layers.labels) {
-      dr.state.layers.labels = L.layerGroup().addTo(target);
+    if (!pr.state.layers.labels) {
+      pr.state.layers.labels = L.layerGroup().addTo(target);
     }
 
-    if (!dr.state.layers.segmentLabels) {
-      dr.state.layers.segmentLabels = L.layerGroup().addTo(target);
-    }
-  };
-
-  dr.clearLabels = function() {
-    if (dr.state.layers.labels) {
-      dr.state.layers.labels.clearLayers();
+    if (!pr.state.layers.segmentLabels) {
+      pr.state.layers.segmentLabels = L.layerGroup().addTo(target);
     }
   };
 
-  dr.clearSegmentTimeLabels = function() {
-    if (dr.state.layers.segmentLabels) {
-      dr.state.layers.segmentLabels.clearLayers();
+  pr.clearLabels = function() {
+    if (pr.state.layers.labels) {
+      pr.state.layers.labels.clearLayers();
     }
   };
 
-  dr.clearRouteLine = function() {
-    if (dr.state.layers.routeLine) {
-      var owner = dr.routeOverlayTarget();
-      if (owner && owner.hasLayer && owner.hasLayer(dr.state.layers.routeLine)) {
-        owner.removeLayer(dr.state.layers.routeLine);
-      } else if (window.map && window.map.hasLayer && window.map.hasLayer(dr.state.layers.routeLine)) {
-        window.map.removeLayer(dr.state.layers.routeLine);
+  pr.clearSegmentTimeLabels = function() {
+    if (pr.state.layers.segmentLabels) {
+      pr.state.layers.segmentLabels.clearLayers();
+    }
+  };
+
+  pr.clearRouteLine = function() {
+    if (pr.state.layers.routeLine) {
+      var owner = pr.routeOverlayTarget();
+      if (owner && owner.hasLayer && owner.hasLayer(pr.state.layers.routeLine)) {
+        owner.removeLayer(pr.state.layers.routeLine);
+      } else if (window.map && window.map.hasLayer && window.map.hasLayer(pr.state.layers.routeLine)) {
+        window.map.removeLayer(pr.state.layers.routeLine);
       }
-      dr.state.layers.routeLine = null;
+      pr.state.layers.routeLine = null;
     }
 
-    dr.clearSegmentTimeLabels();
+    pr.clearSegmentTimeLabels();
   };
 
-  dr.redrawLabels = function() {
+  pr.redrawLabels = function() {
     if (!window.map || !window.L) return;
-    dr.ensureLayers();
-    dr.clearLabels();
+    pr.ensureLayers();
+    pr.clearLabels();
 
-    dr.state.stops.forEach(function(stop, index) {
+    pr.state.stops.forEach(function(stop, index) {
       var icon = L.divIcon({
-        className: 'driving-route-stop-label',
+        className: 'portal-route-stop-label',
         html: '<span>' + (index + 1) + '</span>',
         iconSize: [18, 18],
         iconAnchor: [0, 24]
@@ -66,14 +66,14 @@
         offset: [16, -10],
         opacity: 0.9,
         interactive: false,
-        className: 'driving-route-stop-tooltip'
+        className: 'portal-route-stop-tooltip'
       });
 
-      marker.addTo(dr.state.layers.labels);
+      marker.addTo(pr.state.layers.labels);
     });
   };
 
-  dr.toLatLng = function(point) {
+  pr.toLatLng = function(point) {
     if (!point) return null;
     if (point.lat && typeof point.lat === 'function' && point.lng && typeof point.lng === 'function') {
       return L.latLng(point.lat(), point.lng());
@@ -84,10 +84,10 @@
     return null;
   };
 
-  dr.getPathMidpoint = function(path) {
+  pr.getPathMidpoint = function(path) {
     if (!path || path.length === 0) return null;
 
-    var points = path.map(dr.toLatLng).filter(Boolean);
+    var points = path.map(pr.toLatLng).filter(Boolean);
     if (points.length === 0) return null;
     if (points.length === 1) return points[0];
 
@@ -120,12 +120,12 @@
     return points[Math.floor(points.length / 2)];
   };
 
-  dr.getLegLabelLatLng = function(leg) {
-    var midpoint = dr.getPathMidpoint(leg && leg.path);
+  pr.getLegLabelLatLng = function(leg) {
+    var midpoint = pr.getPathMidpoint(leg && leg.path);
     if (midpoint) return midpoint;
 
-    var fromStop = dr.state.stops[leg.fromIndex];
-    var toStop = dr.state.stops[leg.toIndex];
+    var fromStop = pr.state.stops[leg.fromIndex];
+    var toStop = pr.state.stops[leg.toIndex];
     if (!fromStop || !toStop) return null;
 
     return L.latLng(
@@ -134,22 +134,22 @@
     );
   };
 
-  dr.redrawSegmentTimeLabels = function() {
+  pr.redrawSegmentTimeLabels = function() {
     if (!window.map || !window.L) return;
-    dr.ensureLayers();
-    dr.clearSegmentTimeLabels();
+    pr.ensureLayers();
+    pr.clearSegmentTimeLabels();
 
-    if (!dr.state.settings.showSegmentTimesOnMap) return;
-    if (!dr.state.route || !Array.isArray(dr.state.route.legs)) return;
+    if (!pr.state.settings.showSegmentTimesOnMap) return;
+    if (!pr.state.route || !Array.isArray(pr.state.route.legs)) return;
 
-    dr.state.route.legs.forEach(function(leg) {
-      var latLng = dr.getLegLabelLatLng(leg);
+    pr.state.route.legs.forEach(function(leg) {
+      var latLng = pr.getLegLabelLatLng(leg);
       if (!latLng) return;
 
-      var text = leg.durationText || dr.formatDuration(leg.durationSeconds);
+      var text = leg.durationText || pr.formatDuration(leg.durationSeconds);
       var icon = L.divIcon({
-        className: 'driving-route-segment-time-label',
-        html: '<span>' + dr.escapeHtml(text) + '</span>',
+        className: 'portal-route-segment-time-label',
+        html: '<span>' + pr.escapeHtml(text) + '</span>',
         iconSize: null,
         iconAnchor: [16, 8]
       });
@@ -159,41 +159,41 @@
         interactive: false,
         keyboard: false,
         bubblingMouseEvents: false
-      }).addTo(dr.state.layers.segmentLabels);
+      }).addTo(pr.state.layers.segmentLabels);
     });
   };
 
-  dr.drawRoutePath = function(path, options) {
+  pr.drawRoutePath = function(path, options) {
     options = options || {};
-    dr.clearRouteLine();
+    pr.clearRouteLine();
     if (!path || path.length < 2) return;
 
-    dr.state.layers.routeLine = L.polyline(path, {
+    pr.state.layers.routeLine = L.polyline(path, {
       color: '#ff7f00',
       weight: 5,
       opacity: 0.8,
       interactive: false,
       bubblingMouseEvents: false
-    }).addTo(dr.routeOverlayTarget());
+    }).addTo(pr.routeOverlayTarget());
 
-    dr.redrawSegmentTimeLabels();
+    pr.redrawSegmentTimeLabels();
 
     if (options.fitBounds === false) return;
 
     try {
-      window.map.fitBounds(dr.state.layers.routeLine.getBounds(), { padding: [30, 30] });
+      window.map.fitBounds(pr.state.layers.routeLine.getBounds(), { padding: [30, 30] });
     } catch (e) {
-      console.warn('Driving Route: unable to fit route bounds', e);
+      console.warn('Portal Route: unable to fit route bounds', e);
     }
   };
 
-  dr.redrawRouteLine = function() {
+  pr.redrawRouteLine = function() {
     if (!window.map || !window.L) return;
-    if (!dr.state.route || !Array.isArray(dr.state.route.path)) return;
+    if (!pr.state.route || !Array.isArray(pr.state.route.path)) return;
 
-    var path = dr.state.route.path.map(function(point) {
+    var path = pr.state.route.path.map(function(point) {
       return L.latLng(point.lat, point.lng);
     });
 
-    dr.drawRoutePath(path, { fitBounds: false });
+    pr.drawRoutePath(path, { fitBounds: false });
   };

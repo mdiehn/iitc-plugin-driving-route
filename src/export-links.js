@@ -1,5 +1,5 @@
-  dr.googleMapsUrl = function() {
-    var stops = dr.state.stops;
+  pr.googleMapsUrl = function() {
+    var stops = pr.state.stops;
     if (stops.length < 2) return null;
 
     var origin = stops[0];
@@ -21,15 +21,15 @@
     return 'https://www.google.com/maps/dir/?' + params.toString();
   };
 
-  dr.openGoogleMaps = function() {
-    var url = dr.googleMapsUrl();
+  pr.openGoogleMaps = function() {
+    var url = pr.googleMapsUrl();
     if (!url) {
-      dr.showMessage('Add at least two portals first.');
+      pr.showMessage('Add at least two portals first.');
       return;
     }
 
-    if (dr.state.stops.length > 10) {
-      dr.showMessage('Google Maps may reject routes with too many stops. Try fewer than 10 stops for now.');
+    if (pr.state.stops.length > 10) {
+      pr.showMessage('Google Maps may reject routes with too many stops. Try fewer than 10 stops for now.');
     }
 
     window.open(url, '_blank', 'noopener');

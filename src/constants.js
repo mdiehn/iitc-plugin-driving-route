@@ -1,26 +1,26 @@
-  dr.ID = 'driving-route';
-  dr.NAME = 'Driving Route';
-  dr.VERSION = '0.1.1-dev';
-  dr.SHOW_VERSION_IN_PANEL = true;
+  pr.ID = 'portal-route';
+  pr.NAME = 'Portal Route';
+  pr.VERSION = '0.2.0-dev';
+  pr.SHOW_VERSION_IN_PANEL = true;
 
-  dr.DOM_IDS = {
-    css: 'iitc-plugin-driving-route-css',
-    dialog: 'iitc-plugin-driving-route-dialog',
-    dialogContent: 'iitc-plugin-driving-route-dialog-content',
-    miniControl: 'iitc-plugin-driving-route-mini-control',
-    toolboxLink: 'iitc-plugin-driving-route-toolbox-link'
+  pr.DOM_IDS = {
+    css: 'iitc-plugin-portal-route-css',
+    dialog: 'iitc-plugin-portal-route-dialog',
+    dialogContent: 'iitc-plugin-portal-route-dialog-content',
+    miniControl: 'iitc-plugin-portal-route-mini-control',
+    toolboxLink: 'iitc-plugin-portal-route-toolbox-link'
   };
 
-  dr.STORAGE_KEYS = {
-    stops: 'iitc-driving-route-stops',
-    settings: 'iitc-driving-route-settings',
-    panelOpen: 'iitc-driving-route-panel-open',
-    panelPosition: 'iitc-driving-route-panel-position',
-    route: 'iitc-driving-route-route',
-    routeDirty: 'iitc-driving-route-route-dirty'
+  pr.STORAGE_KEYS = {
+    stops: 'iitc-portal-route-stops',
+    settings: 'iitc-portal-route-settings',
+    panelOpen: 'iitc-portal-route-panel-open',
+    panelPosition: 'iitc-portal-route-panel-position',
+    route: 'iitc-portal-route-route',
+    routeDirty: 'iitc-portal-route-route-dirty'
   };
 
-  dr.DEFAULT_SETTINGS = {
+  pr.DEFAULT_SETTINGS = {
     defaultStopMinutes: 5,
     includeReturnToStart: false,
     showSegmentTimesOnMap: false

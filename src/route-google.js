@@ -1,46 +1,46 @@
-  dr.getGoogleLatLng = function(stop) {
+  pr.getGoogleLatLng = function(stop) {
     return new google.maps.LatLng(stop.lat, stop.lng);
   };
 
-  dr.calculateRoute = function() {
-    if (dr.state.stops.length < 2) {
-      dr.showMessage('Add at least two portals to calculate a route.');
+  pr.calculateRoute = function() {
+    if (pr.state.stops.length < 2) {
+      pr.showMessage('Add at least two portals to calculate a route.');
       return;
     }
 
     if (!window.google || !google.maps || !google.maps.DirectionsService) {
-      dr.showMessage('Google Maps DirectionsService is not available in this IITC session.');
+      pr.showMessage('Google Maps DirectionsService is not available in this IITC session.');
       return;
     }
 
-    var stops = dr.state.stops;
+    var stops = pr.state.stops;
     var origin = stops[0];
     var destination = stops[stops.length - 1];
     var waypoints = stops.slice(1, -1).map(function(stop) {
-      return { location: dr.getGoogleLatLng(stop), stopover: true };
+      return { location: pr.getGoogleLatLng(stop), stopover: true };
     });
 
     var service = new google.maps.DirectionsService();
     var request = {
-      origin: dr.getGoogleLatLng(origin),
-      destination: dr.getGoogleLatLng(destination),
+      origin: pr.getGoogleLatLng(origin),
+      destination: pr.getGoogleLatLng(destination),
       waypoints: waypoints,
       optimizeWaypoints: false,
       travelMode: google.maps.TravelMode.DRIVING
     };
 
-    dr.setBusy(true);
+    pr.setBusy(true);
     service.route(request, function(result, status) {
-      dr.setBusy(false);
+      pr.setBusy(false);
 
       if (status !== google.maps.DirectionsStatus.OK) {
-        dr.showMessage('Route calculation failed: ' + status);
+        pr.showMessage('Route calculation failed: ' + status);
         return;
       }
 
       var route = result.routes && result.routes[0];
       if (!route) {
-        dr.showMessage('Route calculation returned no route.');
+        pr.showMessage('Route calculation returned no route.');
         return;
       }
 
@@ -79,16 +79,16 @@
         });
       }
 
-      dr.state.route = {
+      pr.state.route = {
         legs: legs,
-        totals: dr.calculateTotals(legs),
+        totals: pr.calculateTotals(legs),
         path: path.map(function(point) {
           return { lat: point.lat, lng: point.lng };
         })
       };
-      dr.markRouteCurrent();
+      pr.markRouteCurrent();
 
-      dr.drawRoutePath(path);
-      dr.renderPanel();
+      pr.drawRoutePath(path);
+      pr.renderPanel();
     });
   };

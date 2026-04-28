@@ -1,49 +1,49 @@
-  dr.setBusy = function(isBusy) {
-    var panel = document.getElementById(dr.DOM_IDS.dialogContent);
-    if (panel) panel.classList.toggle('driving-route-busy', !!isBusy);
+  pr.setBusy = function(isBusy) {
+    var panel = document.getElementById(pr.DOM_IDS.dialogContent);
+    if (panel) panel.classList.toggle('portal-route-busy', !!isBusy);
   };
 
-  dr.showMessage = function(message) {
-    var node = document.getElementById('driving-route-message');
+  pr.showMessage = function(message) {
+    var node = document.getElementById('portal-route-message');
     if (node) {
       node.textContent = message;
-      node.classList.add('driving-route-message-visible');
+      node.classList.add('portal-route-message-visible');
       window.setTimeout(function() {
-        node.classList.remove('driving-route-message-visible');
+        node.classList.remove('portal-route-message-visible');
       }, 5000);
     } else {
-      console.log('Driving Route:', message);
+      console.log('Portal Route:', message);
     }
   };
 
-  dr.selectedStopIndex = function() {
+  pr.selectedStopIndex = function() {
     var guid = window.selectedPortal;
     if (!guid) return -1;
-    for (var i = 0; i < dr.state.stops.length; i++) {
-      if (dr.state.stops[i].guid === guid) return i;
+    for (var i = 0; i < pr.state.stops.length; i++) {
+      if (pr.state.stops[i].guid === guid) return i;
     }
     return -1;
   };
 
-  dr.removeSelectedPortal = function() {
-    var index = dr.selectedStopIndex();
+  pr.removeSelectedPortal = function() {
+    var index = pr.selectedStopIndex();
     if (index < 0) {
-      dr.showMessage('Selected portal is not in the route.');
+      pr.showMessage('Selected portal is not in the route.');
       return;
     }
-    dr.removeStop(index);
+    pr.removeStop(index);
   };
 
-  dr.toggleSelectedPortalStop = function() {
-    if (dr.selectedStopIndex() >= 0) {
-      dr.removeSelectedPortal();
+  pr.toggleSelectedPortalStop = function() {
+    if (pr.selectedStopIndex() >= 0) {
+      pr.removeSelectedPortal();
     } else {
-      dr.addSelectedPortal();
+      pr.addSelectedPortal();
     }
   };
 
-  dr.closeDialog = function() {
-    var content = document.getElementById(dr.DOM_IDS.dialogContent);
+  pr.closeDialog = function() {
+    var content = document.getElementById(pr.DOM_IDS.dialogContent);
     if (content && window.jQuery) {
       try {
         window.jQuery(content).closest('.ui-dialog-content').dialog('close');
@@ -55,134 +55,134 @@
     if (content) content.style.display = 'none';
   };
 
-  dr.handleAction = function(action, target) {
-    if (dr.isLayerEnabled && !dr.isLayerEnabled()) {
-      dr.syncLayerUi();
+  pr.handleAction = function(action, target) {
+    if (pr.isLayerEnabled && !pr.isLayerEnabled()) {
+      pr.syncLayerUi();
       return;
     }
 
     if (action === 'open-main') {
-      dr.state.panelView = 'main';
-      dr.state.panelOpen = true;
-      dr.savePanelOpen();
-      dr.renderPanel();
+      pr.state.panelView = 'main';
+      pr.state.panelOpen = true;
+      pr.savePanelOpen();
+      pr.renderPanel();
     } else if (action === 'open-edit') {
-      dr.state.panelView = 'main';
-      dr.state.panelOpen = true;
-      dr.savePanelOpen();
-      dr.renderPanel();
+      pr.state.panelView = 'main';
+      pr.state.panelOpen = true;
+      pr.savePanelOpen();
+      pr.renderPanel();
     } else if (action === 'close-panel') {
-      dr.state.panelOpen = false;
-      dr.savePanelOpen();
-      dr.closeDialog();
+      pr.state.panelOpen = false;
+      pr.savePanelOpen();
+      pr.closeDialog();
     } else if (action === 'toggle-selected-stop') {
-      dr.toggleSelectedPortalStop();
+      pr.toggleSelectedPortalStop();
     } else if (action === 'add-selected-stop') {
-      dr.addSelectedPortal();
+      pr.addSelectedPortal();
     } else if (action === 'move-stop-up') {
-      dr.moveStop(Number(target.getAttribute('data-index')), Number(target.getAttribute('data-index')) - 1);
+      pr.moveStop(Number(target.getAttribute('data-index')), Number(target.getAttribute('data-index')) - 1);
     } else if (action === 'move-stop-down') {
-      dr.moveStop(Number(target.getAttribute('data-index')), Number(target.getAttribute('data-index')) + 1);
+      pr.moveStop(Number(target.getAttribute('data-index')), Number(target.getAttribute('data-index')) + 1);
     } else if (action === 'remove-stop') {
-      dr.removeStop(Number(target.getAttribute('data-index')));
+      pr.removeStop(Number(target.getAttribute('data-index')));
     } else if (action === 'select-stop') {
-      dr.selectStopPortal(Number(target.getAttribute('data-index')), false);
+      pr.selectStopPortal(Number(target.getAttribute('data-index')), false);
     } else if (action === 'select-stop-center') {
-      dr.selectStopPortal(Number(target.getAttribute('data-index')), true);
+      pr.selectStopPortal(Number(target.getAttribute('data-index')), true);
     } else if (action === 'calculate-route') {
-      dr.calculateRoute();
+      pr.calculateRoute();
     } else if (action === 'open-google-maps') {
-      dr.openGoogleMaps();
+      pr.openGoogleMaps();
     } else if (action === 'clear-route') {
-      dr.clearStops();
+      pr.clearStops();
     }
   };
 
-  dr.isLayerEnabled = function() {
-    if (!window.map || !dr.layerGroup) return true;
-    return window.map.hasLayer(dr.layerGroup);
+  pr.isLayerEnabled = function() {
+    if (!window.map || !pr.layerGroup) return true;
+    return window.map.hasLayer(pr.layerGroup);
   };
 
-  dr.createMiniControl = function() {
+  pr.createMiniControl = function() {
     if (!window.L || !window.map) return;
-    if (dr.state.miniControl || document.getElementById(dr.DOM_IDS.miniControl)) return;
+    if (pr.state.miniControl || document.getElementById(pr.DOM_IDS.miniControl)) return;
 
-    var DrivingRouteControl = L.Control.extend({
+    var PortalRouteControl = L.Control.extend({
       options: { position: 'topleft' },
       onAdd: function() {
-        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control driving-route-mini-control iitc-plugin-driving-route-control');
-        container.id = dr.DOM_IDS.miniControl;
+        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control portal-route-mini-control iitc-plugin-portal-route-control');
+        container.id = pr.DOM_IDS.miniControl;
         L.DomEvent.disableClickPropagation(container);
         L.DomEvent.disableScrollPropagation(container);
         container.addEventListener('click', function(ev) {
           var button = ev.target.closest('[data-action]');
           if (!button) return;
           ev.preventDefault();
-          dr.handleAction(button.getAttribute('data-action'), button);
+          pr.handleAction(button.getAttribute('data-action'), button);
         });
         return container;
       }
     });
 
-    dr.state.miniControl = new DrivingRouteControl();
-    window.map.addControl(dr.state.miniControl);
-    dr.setMiniControlVisible(dr.isLayerEnabled());
+    pr.state.miniControl = new PortalRouteControl();
+    window.map.addControl(pr.state.miniControl);
+    pr.setMiniControlVisible(pr.isLayerEnabled());
   };
 
-  dr.setMiniControlVisible = function(isVisible) {
-    var container = document.getElementById(dr.DOM_IDS.miniControl);
+  pr.setMiniControlVisible = function(isVisible) {
+    var container = document.getElementById(pr.DOM_IDS.miniControl);
     if (container) container.style.display = isVisible ? '' : 'none';
   };
 
-  dr.removeMiniControl = function() {
-    if (dr.state.miniControl && window.map) {
+  pr.removeMiniControl = function() {
+    if (pr.state.miniControl && window.map) {
       try {
-        window.map.removeControl(dr.state.miniControl);
+        window.map.removeControl(pr.state.miniControl);
       } catch (e) {
-        console.warn('Driving Route: unable to remove mini control', e);
+        console.warn('Portal Route: unable to remove mini control', e);
       }
     }
 
-    dr.state.miniControl = null;
+    pr.state.miniControl = null;
 
-    var container = document.getElementById(dr.DOM_IDS.miniControl);
+    var container = document.getElementById(pr.DOM_IDS.miniControl);
     if (container && container.parentNode) {
       container.parentNode.removeChild(container);
     }
   };
 
-  dr.renderMiniControl = function() {
-    var container = document.getElementById(dr.DOM_IDS.miniControl);
+  pr.renderMiniControl = function() {
+    var container = document.getElementById(pr.DOM_IDS.miniControl);
     if (!container) return;
 
-    if (!dr.isLayerEnabled()) {
-      dr.setMiniControlVisible(false);
+    if (!pr.isLayerEnabled()) {
+      pr.setMiniControlVisible(false);
       return;
     }
 
-    dr.setMiniControlVisible(true);
+    pr.setMiniControlVisible(true);
 
-    var selectedIndex = dr.selectedStopIndex();
+    var selectedIndex = pr.selectedStopIndex();
     var selectedInRoute = selectedIndex >= 0;
-    var addRemoveClass = selectedInRoute ? ' driving-route-mini-remove' : '';
+    var addRemoveClass = selectedInRoute ? ' portal-route-mini-remove' : '';
     var addRemoveText = selectedInRoute ? '-' : '+';
     var addRemoveTitle = selectedInRoute ? 'Remove selected portal from route' : 'Add selected portal to route';
-    var plotTitle = dr.state.routeDirty ? 'Replot route on map' : 'Plot route on map';
+    var plotTitle = pr.state.routeDirty ? 'Replot route on map' : 'Plot route on map';
 
     container.innerHTML = '' +
       '<a href="#" title="Open route in Google Maps" data-action="open-google-maps">M</a>' +
       '<a href="#" title="' + plotTitle + '" data-action="calculate-route">P</a>' +
-      '<a href="#" class="driving-route-mini-add' + addRemoveClass + '" title="' + addRemoveTitle + '" data-action="toggle-selected-stop">' + addRemoveText + '</a>' +
-      '<a href="#" title="Open Driving Route menu" data-action="open-main">' + dr.state.stops.length + '</a>' +
-      '<a href="#" title="Driving Route menu" data-action="open-main">=</a>';
+      '<a href="#" class="portal-route-mini-add' + addRemoveClass + '" title="' + addRemoveTitle + '" data-action="toggle-selected-stop">' + addRemoveText + '</a>' +
+      '<a href="#" title="Open Portal Route menu" data-action="open-main">' + pr.state.stops.length + '</a>' +
+      '<a href="#" title="Portal Route menu" data-action="open-main">=</a>';
   };
 
-  dr.setupDialogEventHandlers = function() {
-    if (dr.dialogEventsRegistered) return;
-    dr.dialogEventsRegistered = true;
+  pr.setupDialogEventHandlers = function() {
+    if (pr.dialogEventsRegistered) return;
+    pr.dialogEventsRegistered = true;
 
     document.addEventListener('click', function(ev) {
-      var panel = ev.target.closest('#' + dr.DOM_IDS.dialogContent);
+      var panel = ev.target.closest('#' + pr.DOM_IDS.dialogContent);
       if (!panel) return;
 
       var target = ev.target.closest('[data-action]');
@@ -190,32 +190,32 @@
       if (!action) return;
 
       ev.preventDefault();
-      dr.handleAction(action, target);
+      pr.handleAction(action, target);
     });
 
     document.addEventListener('dragstart', function(ev) {
-      var panel = ev.target.closest('#' + dr.DOM_IDS.dialogContent);
+      var panel = ev.target.closest('#' + pr.DOM_IDS.dialogContent);
       if (!panel) return;
 
-      var item = ev.target.closest('.driving-route-stop');
+      var item = ev.target.closest('.portal-route-stop');
       if (!item) return;
 
-      dr.state.dragStopIndex = Number(item.getAttribute('data-index'));
+      pr.state.dragStopIndex = Number(item.getAttribute('data-index'));
       ev.dataTransfer.effectAllowed = 'move';
-      item.classList.add('driving-route-dragging');
+      item.classList.add('portal-route-dragging');
     });
 
     document.addEventListener('dragend', function(ev) {
-      var item = ev.target.closest('.driving-route-stop');
-      if (item) item.classList.remove('driving-route-dragging');
-      dr.state.dragStopIndex = null;
+      var item = ev.target.closest('.portal-route-stop');
+      if (item) item.classList.remove('portal-route-dragging');
+      pr.state.dragStopIndex = null;
     });
 
     document.addEventListener('dragover', function(ev) {
-      var panel = ev.target.closest('#' + dr.DOM_IDS.dialogContent);
+      var panel = ev.target.closest('#' + pr.DOM_IDS.dialogContent);
       if (!panel) return;
 
-      var item = ev.target.closest('.driving-route-stop');
+      var item = ev.target.closest('.portal-route-stop');
       if (!item) return;
 
       ev.preventDefault();
@@ -223,187 +223,187 @@
     });
 
     document.addEventListener('drop', function(ev) {
-      var panel = ev.target.closest('#' + dr.DOM_IDS.dialogContent);
+      var panel = ev.target.closest('#' + pr.DOM_IDS.dialogContent);
       if (!panel) return;
 
-      var item = ev.target.closest('.driving-route-stop');
+      var item = ev.target.closest('.portal-route-stop');
       if (!item) return;
 
       ev.preventDefault();
 
-      var fromIndex = dr.state.dragStopIndex;
+      var fromIndex = pr.state.dragStopIndex;
       var toIndex = Number(item.getAttribute('data-index'));
-      dr.state.dragStopIndex = null;
+      pr.state.dragStopIndex = null;
 
-      dr.moveStop(fromIndex, toIndex);
+      pr.moveStop(fromIndex, toIndex);
     });
 
     document.addEventListener('change', function(ev) {
-      var panel = ev.target.closest('#' + dr.DOM_IDS.dialogContent);
+      var panel = ev.target.closest('#' + pr.DOM_IDS.dialogContent);
       if (!panel) return;
 
       var target = ev.target;
       if (target && target.getAttribute('data-field') === 'show-segment-times-on-map') {
-        dr.state.settings.showSegmentTimesOnMap = !!target.checked;
-        dr.saveSettings();
-        dr.redrawSegmentTimeLabels();
+        pr.state.settings.showSegmentTimesOnMap = !!target.checked;
+        pr.saveSettings();
+        pr.redrawSegmentTimeLabels();
         return;
       }
 
       if (target && target.getAttribute('data-field') === 'default-stop-minutes') {
-        var value = dr.parseDurationMinutes(target.value);
+        var value = pr.parseDurationMinutes(target.value);
         if (value === null) {
-          dr.showMessage('Invalid duration. Use values like 15m, 1.5h, or 2d.');
-          target.value = dr.formatDurationInput(dr.state.settings.defaultStopMinutes);
+          pr.showMessage('Invalid duration. Use values like 15m, 1.5h, or 2d.');
+          target.value = pr.formatDurationInput(pr.state.settings.defaultStopMinutes);
           return;
         }
 
-        dr.state.settings.defaultStopMinutes = value;
-        dr.saveSettings();
-        dr.markRouteStale();
-        dr.renderPanel();
+        pr.state.settings.defaultStopMinutes = value;
+        pr.saveSettings();
+        pr.markRouteStale();
+        pr.renderPanel();
       } else if (target && target.getAttribute('data-field') === 'stop-minutes') {
         var stopIndex = Number(target.getAttribute('data-index'));
-        var stopValue = dr.parseDurationMinutes(target.value);
+        var stopValue = pr.parseDurationMinutes(target.value);
         if (stopValue === null) {
-          dr.showMessage('Invalid duration. Use values like 15m, 1.5h, or 2d.');
-          target.value = dr.formatDurationInput(dr.getEffectiveStopMinutes(dr.state.stops[stopIndex]));
+          pr.showMessage('Invalid duration. Use values like 15m, 1.5h, or 2d.');
+          target.value = pr.formatDurationInput(pr.getEffectiveStopMinutes(pr.state.stops[stopIndex]));
           return;
         }
 
-        dr.setStopMinutes(stopIndex, stopValue);
+        pr.setStopMinutes(stopIndex, stopValue);
       }
     });
   };
 
-  dr.addToolboxLink = function() {
+  pr.addToolboxLink = function() {
     if (!document.getElementById('toolbox')) return;
-    if (document.getElementById(dr.DOM_IDS.toolboxLink)) return;
+    if (document.getElementById(pr.DOM_IDS.toolboxLink)) return;
 
     var link = document.createElement('a');
-    link.id = dr.DOM_IDS.toolboxLink;
+    link.id = pr.DOM_IDS.toolboxLink;
     link.href = '#';
-    link.textContent = 'Driving Route';
+    link.textContent = 'Portal Route';
     link.addEventListener('click', function(ev) {
       ev.preventDefault();
-      if (!dr.isLayerEnabled()) return;
-      dr.state.panelView = 'main';
-      dr.state.panelOpen = true;
-      dr.savePanelOpen();
-      dr.renderPanel();
+      if (!pr.isLayerEnabled()) return;
+      pr.state.panelView = 'main';
+      pr.state.panelOpen = true;
+      pr.savePanelOpen();
+      pr.renderPanel();
     });
 
     var toolbox = document.getElementById('toolbox');
     toolbox.appendChild(link);
   };
 
-  dr.removeToolboxLink = function() {
-    var link = document.getElementById(dr.DOM_IDS.toolboxLink);
+  pr.removeToolboxLink = function() {
+    var link = document.getElementById(pr.DOM_IDS.toolboxLink);
     if (link && link.parentNode) {
       link.parentNode.removeChild(link);
     }
   };
 
-  dr.injectCss = function() {
-    if (document.getElementById(dr.DOM_IDS.css)) return;
+  pr.injectCss = function() {
+    if (document.getElementById(pr.DOM_IDS.css)) return;
     var style = document.createElement('style');
-    style.id = dr.DOM_IDS.css;
-    style.textContent = dr.CSS;
+    style.id = pr.DOM_IDS.css;
+    style.textContent = pr.CSS;
     document.head.appendChild(style);
   };
 
 
-  dr.setupLayerControl = function() {
-    if (dr.layerGroup) return;
+  pr.setupLayerControl = function() {
+    if (pr.layerGroup) return;
 
-    dr.layerGroup = L.FeatureGroup ? new L.FeatureGroup() : L.layerGroup();
+    pr.layerGroup = L.FeatureGroup ? new L.FeatureGroup() : L.layerGroup();
 
     if (typeof window.addLayerGroup === 'function') {
-      window.addLayerGroup('Driving Route', dr.layerGroup, true);
+      window.addLayerGroup('Portal Route', pr.layerGroup, true);
     } else if (window.layerChooser && typeof window.layerChooser.addOverlay === 'function') {
-      window.layerChooser.addOverlay(dr.layerGroup, 'Driving Route');
-      dr.layerGroup.addTo(window.map);
+      window.layerChooser.addOverlay(pr.layerGroup, 'Portal Route');
+      pr.layerGroup.addTo(window.map);
     }
   };
 
-  dr.syncLayerUi = function() {
-    if (dr.isLayerEnabled()) {
-      dr.addToolboxLink();
-      dr.createMiniControl();
-      dr.setMiniControlVisible(true);
-      dr.renderMiniControl();
+  pr.syncLayerUi = function() {
+    if (pr.isLayerEnabled()) {
+      pr.addToolboxLink();
+      pr.createMiniControl();
+      pr.setMiniControlVisible(true);
+      pr.renderMiniControl();
       return;
     }
 
-    dr.state.panelOpen = false;
-    dr.savePanelOpen();
-    dr.closeDialog();
-    dr.setMiniControlVisible(false);
-    dr.removeToolboxLink();
+    pr.state.panelOpen = false;
+    pr.savePanelOpen();
+    pr.closeDialog();
+    pr.setMiniControlVisible(false);
+    pr.removeToolboxLink();
   };
 
-  dr.enable = function() {
-    dr.addToolboxLink();
-    dr.createMiniControl();
-    dr.setMiniControlVisible(true);
-    dr.renderMiniControl();
-    dr.redrawLabels();
+  pr.enable = function() {
+    pr.addToolboxLink();
+    pr.createMiniControl();
+    pr.setMiniControlVisible(true);
+    pr.renderMiniControl();
+    pr.redrawLabels();
   };
 
-  dr.disable = function() {
-    dr.state.panelOpen = false;
-    dr.savePanelOpen();
-    dr.closeDialog();
-    dr.setMiniControlVisible(false);
-    dr.removeToolboxLink();
+  pr.disable = function() {
+    pr.state.panelOpen = false;
+    pr.savePanelOpen();
+    pr.closeDialog();
+    pr.setMiniControlVisible(false);
+    pr.removeToolboxLink();
   };
 
-  dr.setupLayerEvents = function() {
-    if (dr.layerEventsRegistered) return;
-    if (!window.map || !dr.layerGroup) return;
+  pr.setupLayerEvents = function() {
+    if (pr.layerEventsRegistered) return;
+    if (!window.map || !pr.layerGroup) return;
 
     window.map.on('layeradd', function(e) {
-      if (e.layer !== dr.layerGroup) return;
-      dr.enable();
+      if (e.layer !== pr.layerGroup) return;
+      pr.enable();
     });
 
     window.map.on('layerremove', function(e) {
-      if (e.layer !== dr.layerGroup) return;
-      dr.disable();
+      if (e.layer !== pr.layerGroup) return;
+      pr.disable();
     });
 
-    dr.layerEventsRegistered = true;
+    pr.layerEventsRegistered = true;
   };
 
-  dr.setup = function() {
+  pr.setup = function() {
     try {
       if (plugin_info && plugin_info.script && plugin_info.script.version) {
-        dr.VERSION = plugin_info.script.version;
+        pr.VERSION = plugin_info.script.version;
       }
 
-      dr.injectCss();
-      dr.loadState();
-      dr.setupLayerControl();
-      dr.setupLayerEvents();
-      dr.createMiniControl();
-      dr.setupDialogEventHandlers();
-      dr.addToolboxLink();
-      dr.syncLayerUi();
-      dr.renderPanel();
-      dr.renderMiniControl();
-      dr.redrawLabels();
-      dr.redrawRouteLine();
+      pr.injectCss();
+      pr.loadState();
+      pr.setupLayerControl();
+      pr.setupLayerEvents();
+      pr.createMiniControl();
+      pr.setupDialogEventHandlers();
+      pr.addToolboxLink();
+      pr.syncLayerUi();
+      pr.renderPanel();
+      pr.renderMiniControl();
+      pr.redrawLabels();
+      pr.redrawRouteLine();
 
-      if (typeof window.addHook === 'function' && !dr.portalHookRegistered) {
+      if (typeof window.addHook === 'function' && !pr.portalHookRegistered) {
         window.addHook('portalDetailsUpdated', function() {
-          dr.injectPortalDetailsAction();
-          dr.renderMiniControl();
+          pr.injectPortalDetailsAction();
+          pr.renderMiniControl();
         });
-        dr.portalHookRegistered = true;
+        pr.portalHookRegistered = true;
       }
 
-      console.log('Driving Route setup complete');
+      console.log('Portal Route setup complete');
     } catch (e) {
-      console.error('Driving Route setup failed:', e);
+      console.error('Portal Route setup failed:', e);
     }
   };

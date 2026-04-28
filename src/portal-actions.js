@@ -1,4 +1,4 @@
-  dr.portalToStop = function(guid) {
+  pr.portalToStop = function(guid) {
     var portal = guid && window.portals && window.portals[guid];
     if (!portal || !portal.getLatLng) return null;
 
@@ -13,31 +13,31 @@
     };
   };
 
-  dr.addSelectedPortal = function() {
+  pr.addSelectedPortal = function() {
     var guid = window.selectedPortal;
-    var stop = dr.portalToStop(guid);
+    var stop = pr.portalToStop(guid);
     if (!stop) {
-      dr.showMessage('No selected portal found.');
+      pr.showMessage('No selected portal found.');
       return;
     }
-    dr.addStop(stop);
+    pr.addStop(stop);
   };
 
-  dr.injectPortalDetailsAction = function() {
+  pr.injectPortalDetailsAction = function() {
     var container = document.querySelector('#portaldetails .linkdetails') || document.querySelector('#portaldetails');
-    if (!container || container.querySelector('.driving-route-add-link')) return;
+    if (!container || container.querySelector('.portal-route-add-link')) return;
 
     var link = document.createElement('a');
     link.href = '#';
-    link.className = 'driving-route-add-link';
-    link.textContent = 'Add to Driving Route';
+    link.className = 'portal-route-add-link';
+    link.textContent = 'Add to Portal Route';
     link.addEventListener('click', function(ev) {
       ev.preventDefault();
-      dr.addSelectedPortal();
+      pr.addSelectedPortal();
     });
 
     var wrapper = document.createElement('div');
-    wrapper.className = 'driving-route-portal-action';
+    wrapper.className = 'portal-route-portal-action';
     wrapper.appendChild(link);
     container.appendChild(wrapper);
   };
