@@ -93,7 +93,7 @@ function wrapper(plugin_info) {
 
 .portal-route-waypoint-row {
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr) 42px 22px 22px 22px;
+  grid-template-columns: 20px minmax(0, 1fr) max-content 42px 22px 22px 22px;
   gap: 2px;
   align-items: center;
   width: 100%;
@@ -108,6 +108,7 @@ function wrapper(plugin_info) {
 
 .portal-route-waypoint-num,
 .portal-route-waypoint-name-cell,
+.portal-route-leg-cell,
 .portal-route-wait-cell,
 .portal-route-row-action {
   min-width: 0;
@@ -123,6 +124,14 @@ function wrapper(plugin_info) {
 
 .portal-route-waypoint-name-cell {
   overflow: hidden;
+}
+
+.portal-route-leg-cell {
+  min-width: max-content;
+  padding-right: 14px;
+  text-align: right;
+  white-space: nowrap;
+  overflow: visible;
 }
 
 .portal-route-wait-cell {
@@ -229,13 +238,19 @@ button.portal-route-waypoint-badge {
 }
 
 .portal-route-leg {
-  margin: 1px 0 3px 23px;
-  padding-left: 5px;
-  opacity: 0.85;
-  font-size: 10px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: block;
+  width: max-content;
+  overflow: visible;
+  text-overflow: clip;
+  color: inherit;
+  opacity: 1;
+  font: inherit;
+  font-weight: bold;
+}
+
+.portal-route-leg-stale,
+.portal-route-leg-empty {
+  opacity: 0.45;
 }
 
 .portal-route-stale {
@@ -400,12 +415,16 @@ button.portal-route-waypoint-name,
   }
 
   .portal-route-waypoint-row {
-    grid-template-columns: 18px minmax(0, 1fr) 38px 20px 20px 20px;
+    grid-template-columns: 18px minmax(0, 1fr) max-content 38px 20px 20px 20px;
     gap: 1px;
   }
 
   .portal-route-waypoint-num {
     width: 18px;
+  }
+
+  .portal-route-leg-cell {
+    padding-right: 9px;
   }
 
   .portal-route-wait-cell {
@@ -426,9 +445,6 @@ button.portal-route-waypoint-name,
     max-width: 20px !important;
   }
 
-  .portal-route-leg {
-    margin-left: 20px;
-  }
 }
 `;
 
@@ -1061,16 +1077,19 @@ button.portal-route-waypoint-name,
   };
 
   pr.renderRouteSegment = function(leg) {
-    if (!leg) return '';
+    if (!leg) {
+      return '<span class="portal-route-leg portal-route-leg-empty">---- / ----</span>';
+    }
 
     var duration = leg.durationText || pr.formatDuration(leg.durationSeconds);
     var distance = leg.distanceText || pr.formatDistance(leg.distanceMeters);
+    var staleClass = pr.state.routeDirty ? ' portal-route-leg-stale' : '';
 
-    return '<div class="portal-route-leg">' +
-      '<span>' + pr.escapeHtml(duration) + '</span>' +
-      '<span> / </span>' +
-      '<span>' + pr.escapeHtml(distance) + '</span>' +
-      '</div>';
+    return '<span class="portal-route-leg' + staleClass + '">' +
+      pr.escapeHtml(duration) +
+      ' / ' +
+      pr.escapeHtml(distance) +
+      '</span>';
   };
 
   pr.renderStopsList = function(legsByToIndex) {
@@ -1086,15 +1105,12 @@ button.portal-route-waypoint-name,
       html += '<div class="portal-route-waypoint-row" data-index="' + index + '">';
       html += '<div class="portal-route-waypoint-num"><button type="button" class="portal-route-stop-num portal-route-waypoint-badge" title="Select and center portal" data-action="select-stop-center" data-index="' + index + '">' + (index + 1) + '</button></div>';
       html += '<div class="portal-route-waypoint-name-cell"><button type="button" class="portal-route-waypoint-name" title="Select portal" data-action="select-stop" data-index="' + index + '">' + pr.escapeHtml(stop.title) + '</button></div>';
+      html += '<div class="portal-route-leg-cell">' + (index < stops.length - 1 ? pr.renderRouteSegment(legsByToIndex[index + 1]) : '') + '</div>';
       html += '<div class="portal-route-wait-cell"><input class="portal-route-wait-input" type="text" inputmode="decimal" value="' + pr.escapeHtml(waitValue) + '" title="Examples: 15m, 1.5h, 2d" data-field="stop-minutes" data-index="' + index + '"></div>';
       html += '<div class="portal-route-row-action"><button type="button" class="portal-route-row-button" title="Move up" data-action="move-stop-up" data-index="' + index + '" ' + (index === 0 ? 'disabled' : '') + '>&uarr;</button></div>';
       html += '<div class="portal-route-row-action"><button type="button" class="portal-route-row-button" title="Move down" data-action="move-stop-down" data-index="' + index + '" ' + (index === stops.length - 1 ? 'disabled' : '') + '>&darr;</button></div>';
       html += '<div class="portal-route-row-action"><button type="button" class="portal-route-row-button portal-route-remove-stop-button" title="Remove waypoint" data-action="remove-stop" data-index="' + index + '">X</button></div>';
       html += '</div>';
-
-      if (index < stops.length - 1) {
-        html += pr.renderRouteSegment(legsByToIndex[index + 1]);
-      }
     });
 
     html += '</div>';

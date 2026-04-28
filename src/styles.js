@@ -71,7 +71,7 @@
 
 .portal-route-waypoint-row {
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr) 42px 22px 22px 22px;
+  grid-template-columns: 20px minmax(0, 1fr) max-content 42px 22px 22px 22px;
   gap: 2px;
   align-items: center;
   width: 100%;
@@ -86,6 +86,7 @@
 
 .portal-route-waypoint-num,
 .portal-route-waypoint-name-cell,
+.portal-route-leg-cell,
 .portal-route-wait-cell,
 .portal-route-row-action {
   min-width: 0;
@@ -101,6 +102,14 @@
 
 .portal-route-waypoint-name-cell {
   overflow: hidden;
+}
+
+.portal-route-leg-cell {
+  min-width: max-content;
+  padding-right: 14px;
+  text-align: right;
+  white-space: nowrap;
+  overflow: visible;
 }
 
 .portal-route-wait-cell {
@@ -207,13 +216,19 @@ button.portal-route-waypoint-badge {
 }
 
 .portal-route-leg {
-  margin: 1px 0 3px 23px;
-  padding-left: 5px;
-  opacity: 0.85;
-  font-size: 10px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: block;
+  width: max-content;
+  overflow: visible;
+  text-overflow: clip;
+  color: inherit;
+  opacity: 1;
+  font: inherit;
+  font-weight: bold;
+}
+
+.portal-route-leg-stale,
+.portal-route-leg-empty {
+  opacity: 0.45;
 }
 
 .portal-route-stale {
@@ -378,12 +393,16 @@ button.portal-route-waypoint-name,
   }
 
   .portal-route-waypoint-row {
-    grid-template-columns: 18px minmax(0, 1fr) 38px 20px 20px 20px;
+    grid-template-columns: 18px minmax(0, 1fr) max-content 38px 20px 20px 20px;
     gap: 1px;
   }
 
   .portal-route-waypoint-num {
     width: 18px;
+  }
+
+  .portal-route-leg-cell {
+    padding-right: 9px;
   }
 
   .portal-route-wait-cell {
@@ -404,8 +423,5 @@ button.portal-route-waypoint-name,
     max-width: 20px !important;
   }
 
-  .portal-route-leg {
-    margin-left: 20px;
-  }
 }
 `;
