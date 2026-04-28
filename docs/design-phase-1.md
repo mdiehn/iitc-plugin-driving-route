@@ -1,40 +1,47 @@
-# IITC Portal Route Plugin - Phase 1 Design
-
-## Purpose
+# Phase 1 design
 
 `iitc-plugin-portal-route` helps an IITC user plan a route through selected portals.
 
-Phase 1 is a mobile-first manual route planner. It is meant to make route planning usable directly from IITC without trying to become a full navigation app.
+Phase 1 is the mobile-first manual route planner.
 
-## Phase 1 feature set
+## Feature set
 
 - Add portals to an ordered route from the portal details panel.
-- Show a collapsible mobile-friendly route panel.
-- Label portals on the map by route order.
-- Calculate a route through selected portals.
-- Show drive time and distance for each route segment.
+- Show a compact route panel.
+- Label route stops on the map.
+- Plot a route through selected portals.
+- Show drive time and distance for each route leg.
 - Show total drive time, stop time, trip time, and distance.
-- Support a global default stop-time setting, defaulting to 5 minutes.
+- Support a global default stop time.
 - Support per-stop wait-time overrides.
 - Mark plotted route data stale when stops or stop times change.
-- Show segment details between the two waypoint rows they describe.
+- Show route leg details in the stop list.
 - Optionally show segment drive-time labels on the map.
 - Persist route state across IITC reloads.
-- Open the current route in Google Maps.
+- Export the current route to Google Maps.
+- Warn when Google Maps may omit stops.
+- Export and import route data as JSON.
+- Open a printable route summary.
 
 ## Mobile-first rules
 
 - No hover-only controls.
-- No tiny buttons.
-- Avoid wide tables for interactive controls.
-- Do not depend on drag-and-drop for core functionality.
+- No tiny buttons for core actions.
+- Avoid wide tables.
+- Do not depend on drag-and-drop.
 - Keep route controls compact.
 - Keep the map usable while the panel is open.
-- Prefer explicit buttons and toggles over hidden gestures.
+- Use plain labels when glyphs are risky on mobile.
 
 ## Route state
 
-The plugin tracks both the ordered waypoint list and the calculated route result.
+The plugin tracks:
+
+- ordered stops
+- stop wait times
+- settings
+- plotted route data
+- whether the plotted route is stale
 
 A plotted route becomes stale when:
 
@@ -44,23 +51,36 @@ A plotted route becomes stale when:
 - a per-stop wait time changes
 - the default stop time changes
 
-When the route is stale, the UI should make it clear that the user needs to replot before the displayed totals and route line should be treated as current.
+When data is stale, the UI should show that the route needs to be replotted.
 
-## External map export
-
-Google Maps export is useful but has waypoint limits.
+## Google Maps export
 
 Observed Google Maps behavior:
 
-- Google Maps appears to plot the first point and final point, plus up to 9 intermediate stops.
-- That means 11 total route points.
-- With more than 11 total points, Google Maps may omit stops between the ninth intermediate stop and the final destination.
+- first point is used as the origin
+- final point is used as the destination
+- up to 9 intermediate stops are included
+- more than 11 total route points may export incompletely
 
-The plugin currently warns before opening Google Maps when the route exceeds this limit and lists the stops that Google Maps may omit. Route splitting is deferred.
+Current behavior:
+
+- warn before opening Google Maps when the route has more than 11 points
+- list the stops Google Maps may omit
+- let the user cancel or continue anyway
+
+Route splitting is deferred.
+
+## Import, export, and print
+
+JSON export/import is meant to be simple route backup and sharing.
+
+Imported routes restore stop order and stop timing. Imported route data should be treated as stale until replotted.
+
+The printable view is meant for quick paper or PDF output, not rich formatting.
 
 ## Related plugins
 
-This plugin is a separate implementation, but its design was informed by existing IITC route-planning plugins, including Traveling Agent and Map Route Planner.
+Portal Route is a separate implementation, but its design was informed by existing IITC route-planning plugins, including Traveling Agent and Map Route Planner.
 
 ## Deferred features
 
@@ -72,5 +92,5 @@ This plugin is a separate implementation, but its design was informed by existin
 - Return-to-start routing.
 - Apple Maps and Waze links.
 - Saved named routes.
-- IITC Sync support or import/export.
+- IITC Sync support.
 - Turn-by-turn directions inside IITC.
