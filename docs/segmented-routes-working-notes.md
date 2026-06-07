@@ -33,12 +33,18 @@ Segmented routes add pressure in these places:
 
 - Segmented support is additive, not a replacement for the flat model.
 - Every segmented route keeps a flat ordered stop list for compatibility.
-- Segment structure is stored beside the flat stop list.
+- `route.stops` is the canonical executable waypoint list in the first
+  implementation.
+- Segment structure is stored beside the flat stop list as an additive overlay.
 - Segment IDs and stop IDs are required for stable references.
 - External/unknown segments are preserved raw instead of coerced into normal
   route segments.
 - JSON/library export is the lossless format; Google/Apple export is explicitly
   lossy for segmented meaning.
+- Per-segment `travelMode` and `routingProvider` behavior is deferred and must
+  not affect first-release behavior.
+- Print falls back to the existing flat-route behavior unless optional labels
+  can be added cheaply and safely.
 
 ## Why keep a flat stop list
 
@@ -50,9 +56,9 @@ properties:
 - route-library and Drive storage stay inspectable and recoverable
 - the first implementation can be incremental instead of all-or-nothing
 
-The tradeoff is duplicated structure. That is acceptable for the foundation if
-the implementation clearly defines which fields are authoritative in each code
-path.
+The tradeoff is duplicated structure. That is acceptable for the foundation
+because the first release now has a strict rule: `route.stops` is authoritative
+for executable behavior, and segments may annotate it but must not overrule it.
 
 ## Working assumptions
 
@@ -62,25 +68,52 @@ path.
 - Not every segment should contribute equally to Google/Apple export.
 - Some segmented routes will only have partial plotting/export support at first.
 
-## Unresolved modeling choices
+## Deterministic rules for the first implementation
 
-### Authoritative source of truth
+### Source of truth
 
-Open choice:
+- `route.stops` is canonical for plotting fallback, map-app export, simple-route
+  compatibility, and older-build behavior.
+- `route.segments` is a structural overlay that references spans or anchors in
+  the canonical stop list.
+- If segment metadata disagrees with `route.stops`, the stop list wins for
+  executable behavior and the segment becomes partial or non-executable.
 
-- flat `route.stops` is authoritative, with segments as structure metadata
-- segments are authoritative, with `route.stops` as a derived compatibility view
+### Normalization precedence
 
-Current recommendation:
+- canonical stop order is `route.stops` array order
+- `route.segments` array order is the default segment display/export order
+- `segmentOrder`, if present, may be normalized into array order on load/save
+- validated stop anchors outrank cached `waypointRange`
+- `waypointRange` must be treated as a convenience cache, not a stronger source
+  of truth than anchors or flat stop order
+- invalid ranges or anchors make a segment non-executable but preserve it as
+  metadata when possible
+- unknown or external payload is preserved but not trusted for routing
 
-- for the first implementation, keep `route.stops` authoritative for backward
-  compatibility and make segmented helpers validate against it
+### Save/load behavior
 
-Reason:
+- segmented routes save both canonical stops and segment metadata
+- normalization may add missing stop IDs and segment IDs
+- normalization must not silently reorder canonical stops to satisfy segment
+  metadata
+- newer builds should rewrite inconsistent `segmentOrder` into deterministic
+  segment array order before save
 
-- smaller implementation risk
-- easier fallback to current save/load/export paths
-- easier diff against existing route behavior
+### Plotting/export/print fallback
+
+- executable plotting/export follows canonical stops plus validated conservative
+  segment behavior
+- Google/Apple export is intentionally lossy and falls back to flat route
+  behavior when needed
+- print uses the existing flat stop list in the first release
+
+### Older-build fallback
+
+- older builds that ignore segment metadata should still load the flat route
+  from `route.stops`
+- segment labels/types may be lost if an older build rewrites the route
+- compatibility depends on preserving the canonical flat stop list
 
 ### Segment payload depth
 
@@ -156,8 +189,6 @@ This is enough to validate the foundation before building editing tools.
   `route-library`, or a new schema helper?
 - Should current-route JSON export format stay `portal-route.v1` with additive
   fields or move to a new format tag?
-- Should print output be blocked for partial/unknown segmented routes at first,
-  or allowed with warnings?
 - Do connector/transfer segments need user-visible labels in the first UI slice,
   or are type badges enough?
 
