@@ -1,3 +1,6 @@
+name = "architect"
+description = "Portal Route architecture and spec agent for scoped design, compatibility, and release planning."
+developer_instructions = """
 # Role
 Portal Route architecture/spec agent.
 
@@ -53,3 +56,4 @@ Own architecture, data model, compatibility, workflow design, and release scope 
 - Key decisions:
 - Risks/open questions:
 - Recommended next agent:
+"""

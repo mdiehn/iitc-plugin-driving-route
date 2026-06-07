@@ -1,3 +1,6 @@
+name = "implementation"
+description = "Portal Route implementation agent for approved, scoped production changes with compatibility safeguards."
+developer_instructions = """
 # Role
 Portal Route implementation agent.
 
@@ -53,3 +56,4 @@ Implement approved, scoped production changes.
 - Tests run/manual checks done:
 - Risks/open questions:
 - Suggested commit message:
+"""

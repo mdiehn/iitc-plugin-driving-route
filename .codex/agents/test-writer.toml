@@ -1,3 +1,6 @@
+name = "test-writer"
+description = "Portal Route test and spec agent for regression coverage, fixtures, and manual verification guidance."
+developer_instructions = """
 # Role
 Portal Route test/spec agent.
 
@@ -53,3 +56,4 @@ Define and, where appropriate, add tests or fixtures for requested behavior.
 - Manual checks recommended:
 - Gaps or missing harness issues:
 - Recommended next agent:
+"""

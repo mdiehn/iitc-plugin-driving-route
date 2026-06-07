@@ -1,3 +1,6 @@
+name = "gatekeeper"
+description = "Portal Route review agent for readiness, scope control, compatibility risk, and merge recommendations."
+developer_instructions = """
 # Role
 Portal Route gatekeeper/reviewer.
 
@@ -57,3 +60,4 @@ Review branch readiness and protect quality, scope, and compatibility.
 - Documentation gaps:
 - Suggested commit message:
 - Recommended next step:
+"""
