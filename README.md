@@ -12,7 +12,7 @@ Version 1.6.0 adds configurable route line color, thickness, and style, plus a s
 
 Large bulk-selected routes can be saved and edited, but Google routing may not plot routes with more than 26 stops in one request yet.
 
-**Install:** [`portal-route.user.js`](https://github.com/mdiehn/iitc-plugin-portal-route/raw/refs/heads/main/dist/portal-route.user.js)
+**Install:** [`portal-route.user.js`](https://github.com/mdiehn/iitc-plugin-portal-route/raw/refs/heads/feat/segmented-route-foundation/dist/portal-route.user.js)
 
 ## Quick start
 

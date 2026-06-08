@@ -1473,6 +1473,11 @@ button.portal-route-waypoint-name,
   pr.NAME = 'Portal Route';
   pr.VERSION = '1.6.0';
   pr.SHOW_VERSION_IN_PANEL = true;
+  pr.LINEAR_ROUTE_SCHEMA_VERSION = 1;
+  pr.SEGMENTED_ROUTE_SCHEMA_VERSION = 2;
+  pr.ROUTE_LIBRARY_SCHEMA_VERSION = pr.SEGMENTED_ROUTE_SCHEMA_VERSION;
+  pr.ROUTE_KIND_LINEAR = 'linear';
+  pr.ROUTE_KIND_SEGMENTED = 'segmented';
 
   pr.DOM_IDS = {
     css: 'iitc-plugin-portal-route-css',
@@ -1528,6 +1533,7 @@ button.portal-route-waypoint-name,
     panelSize: 'iitc-portal-route-panel-size',
     panelSizeUserSet: 'iitc-portal-route-panel-size-user-set',
     route: 'iitc-portal-route-route',
+    routeStructure: 'iitc-portal-route-route-structure',
     routeDirty: 'iitc-portal-route-route-dirty',
     routeLibrary: 'iitc-portal-route-library',
     routeLibraryDriveCache: 'iitc-portal-route-drive-library-cache',
@@ -1642,6 +1648,7 @@ button.portal-route-waypoint-name,
 
   pr.state = {
     stops: [],
+    routeStructure: null,
     route: null,
     routeDirty: false,
     settings: pr.normalizeSettings(),
@@ -1666,6 +1673,27 @@ button.portal-route-waypoint-name,
     restoringRouteEdit: false
   };
 
+  pr.stableRoutePartId = function(value, prefix, index, seenIds) {
+    value = typeof value === 'string' ? value.trim() : '';
+    seenIds = seenIds || {};
+
+    if (value && !seenIds[value]) {
+      seenIds[value] = true;
+      return value;
+    }
+
+    var base = prefix + '-' + ((typeof index === 'number' ? index : 0) + 1);
+    var candidate = base;
+    var suffix = 2;
+    while (seenIds[candidate]) {
+      candidate = base + '-' + suffix;
+      suffix += 1;
+    }
+
+    seenIds[candidate] = true;
+    return candidate;
+  };
+
   pr.getEffectiveStopMinutes = function(stop) {
     if (stop && typeof stop.stopMinutes === 'number' && !Number.isNaN(stop.stopMinutes)) {
       return stop.stopMinutes;
@@ -1684,9 +1712,11 @@ button.portal-route-waypoint-name,
       if (rawStops) {
         var stops = JSON.parse(rawStops);
         if (Array.isArray(stops)) {
-          pr.state.stops = stops.map(function(stop) {
+          var seenStopIds = {};
+          pr.state.stops = stops.map(function(stop, index) {
             if (!stop) return stop;
             return Object.assign({}, stop, {
+              id: pr.stableRoutePartId(stop.id, 'stop', index, seenStopIds),
               type: stop.type || (stop.guid ? 'portal' : 'map'),
               home: (stop.type || (stop.guid ? 'portal' : 'map')) === 'map' && !!stop.home
             });
@@ -1725,6 +1755,12 @@ button.portal-route-waypoint-name,
           pr.state.route = route;
           if (pr.refreshRouteTravelEstimates) pr.refreshRouteTravelEstimates(pr.state.route);
         }
+      }
+
+      var rawRouteStructure = localStorage.getItem(pr.STORAGE_KEYS.routeStructure);
+      if (rawRouteStructure) {
+        var routeStructure = pr.normalizeRouteStructure(JSON.parse(rawRouteStructure), pr.state.stops);
+        pr.state.routeStructure = pr.routeStructureStateFromNormalized(routeStructure);
       }
 
       var rawRouteDirty = localStorage.getItem(pr.STORAGE_KEYS.routeDirty);
@@ -1770,11 +1806,19 @@ button.portal-route-waypoint-name,
     } else {
       localStorage.removeItem(pr.STORAGE_KEYS.route);
     }
+
+    if (pr.currentRouteStructureData && pr.currentRouteStructureData()) {
+      localStorage.setItem(pr.STORAGE_KEYS.routeStructure, JSON.stringify(pr.currentRouteStructureData()));
+    } else {
+      localStorage.removeItem(pr.STORAGE_KEYS.routeStructure);
+    }
+
     localStorage.setItem(pr.STORAGE_KEYS.routeDirty, String(!!pr.state.routeDirty));
   };
 
   pr.clearSavedRoute = function() {
     localStorage.removeItem(pr.STORAGE_KEYS.route);
+    localStorage.removeItem(pr.STORAGE_KEYS.routeStructure);
     localStorage.removeItem(pr.STORAGE_KEYS.routeDirty);
   };
 
@@ -1802,6 +1846,7 @@ button.portal-route-waypoint-name,
     return {
       label: label || 'route edit',
       stops: pr.cloneForUndo(pr.state.stops || []),
+      routeStructure: pr.cloneForUndo(pr.state.routeStructure || null),
       settings: pr.routeUndoSettings(),
       route: pr.cloneForUndo(pr.state.route || null),
       routeDirty: !!pr.state.routeDirty,
@@ -1814,6 +1859,7 @@ button.portal-route-waypoint-name,
   pr.routeEditSnapshotKey = function(snapshot) {
     return JSON.stringify({
       stops: snapshot.stops,
+      routeStructure: snapshot.routeStructure,
       settings: snapshot.settings,
       route: snapshot.route,
       routeDirty: snapshot.routeDirty,
@@ -1859,6 +1905,7 @@ button.portal-route-waypoint-name,
     pr.state.restoringRouteEdit = true;
     try {
       pr.state.stops = pr.cloneForUndo(snapshot.stops || []);
+      pr.state.routeStructure = pr.cloneForUndo(snapshot.routeStructure || null);
       pr.state.settings = Object.assign({}, pr.state.settings, pr.routeUndoSettings(snapshot.settings));
       pr.state.route = pr.cloneForUndo(snapshot.route || null);
       pr.state.routeDirty = !!snapshot.routeDirty;
@@ -3071,7 +3118,14 @@ button.portal-route-waypoint-name,
 
     if (pr.pushUndoSnapshot) pr.pushUndoSnapshot('add waypoint');
 
+    var seenStopIds = {};
+    pr.state.stops.forEach(function(existing, existingIndex) {
+      if (!existing) return;
+      pr.stableRoutePartId(existing.id, 'stop', existingIndex, seenStopIds);
+    });
+
     pr.state.stops.push({
+      id: pr.stableRoutePartId(stop.id, 'stop', pr.state.stops.length, seenStopIds),
       guid: guid,
       type: stopType,
       title: title,
@@ -3162,6 +3216,7 @@ button.portal-route-waypoint-name,
     if (pr.pushUndoSnapshot) pr.pushUndoSnapshot('move waypoint');
 
     pr.state.stops[index] = Object.assign({}, existing, {
+      id: existing.id || pr.stableRoutePartId(replacement.id, 'stop', index, {}),
       guid: guid,
       type: stopType,
       title: title,
@@ -3263,6 +3318,7 @@ button.portal-route-waypoint-name,
 
     pr.state.stops = [];
     pr.state.route = null;
+    pr.state.routeStructure = null;
     pr.state.routeDirty = false;
     pr.state.selectedMapPointIndex = null;
     pr.state.activeRouteId = null;
@@ -3347,15 +3403,18 @@ button.portal-route-waypoint-name,
 
     pr.state.stops = [];
     pr.state.route = null;
+    pr.state.routeStructure = null;
     pr.state.routeDirty = false;
     pr.state.selectedMapPointIndex = null;
     pr.state.activeRouteId = null;
 
+    var seenStopIds = {};
     stops.forEach(function(stop) {
       if (!stop || typeof stop.lat !== 'number' || typeof stop.lng !== 'number') return;
       var guid = pr.stopGuidFromData(stop);
       var stopType = stop.type || (guid ? 'portal' : 'map');
       pr.state.stops.push({
+        id: pr.stableRoutePartId(stop.id, 'stop', pr.state.stops.length, seenStopIds),
         guid: guid,
         type: stopType,
         title: pr.hydratedStopTitle(stop, stopType, pr.state.stops.length),
@@ -3541,6 +3600,179 @@ button.portal-route-waypoint-name,
       distanceMeters: distanceMeters,
       travelMode: pr.getTravelMode(),
       routingProvider: pr.getRoutingProvider()
+    };
+  };
+
+  pr.normalizeStableRoutePartId = function(value, prefix, index, seenIds) {
+    return pr.stableRoutePartId(value, prefix, index, seenIds);
+  };
+
+  pr.serializeRouteStop = function(stop, index, seenIds) {
+    return {
+      id: pr.normalizeStableRoutePartId(stop && stop.id, 'stop', index, seenIds),
+      guid: stop && stop.guid || null,
+      type: stop && (stop.type || (stop.guid ? 'portal' : 'map')) || 'map',
+      title: stop && stop.title || ((stop && (stop.type || (stop.guid ? 'portal' : 'map'))) === 'map' ? 'Map point' : 'Unnamed portal'),
+      lat: Number(stop && stop.lat),
+      lng: Number(stop && stop.lng),
+      stopMinutes: stop && typeof stop.stopMinutes === 'number' ? stop.stopMinutes : null,
+      startOnMe: !!(stop && stop.startOnMe),
+      home: ((stop && (stop.type || (stop.guid ? 'portal' : 'map'))) || 'map') === 'map' && !!(stop && stop.home),
+      accuracy: stop && typeof stop.accuracy === 'number' ? stop.accuracy : null,
+      updatedAt: stop && stop.updatedAt || null
+    };
+  };
+
+  pr.serializeRouteStops = function(stops) {
+    var seenIds = {};
+    return (stops || []).map(function(stop, index) {
+      return pr.serializeRouteStop(stop, index, seenIds);
+    });
+  };
+
+  pr.normalizeImportedStop = function(stop, index, seenIds) {
+    if (!stop || typeof stop !== 'object') return null;
+
+    var lat = Number(stop.lat);
+    var lng = Number(stop.lng);
+    if (!isFinite(lat) || !isFinite(lng)) return null;
+
+    var stopMinutes = null;
+    if (stop.stopMinutes !== null && stop.stopMinutes !== undefined && stop.stopMinutes !== '') {
+      stopMinutes = Number(stop.stopMinutes);
+      if (!isFinite(stopMinutes) || stopMinutes < 0) stopMinutes = null;
+      if (stopMinutes !== null) stopMinutes = Math.round(stopMinutes);
+    }
+
+    var guid = pr.stopGuidFromData(stop);
+    var type = stop.type || (guid ? 'portal' : 'map');
+
+    return {
+      id: pr.normalizeStableRoutePartId(stop.id, 'stop', index, seenIds),
+      guid: guid,
+      type: type,
+      title: pr.hydratedStopTitle(stop, type, index),
+      lat: lat,
+      lng: lng,
+      stopMinutes: stopMinutes,
+      startOnMe: !!stop.startOnMe,
+      home: type === 'map' && !!stop.home,
+      accuracy: typeof stop.accuracy === 'number' ? stop.accuracy : null,
+      updatedAt: stop.updatedAt || null
+    };
+  };
+
+  pr.normalizeRouteSegmentOrder = function(segments, segmentOrder) {
+    var remaining = {};
+    var ordered = [];
+
+    segments.forEach(function(segment) {
+      remaining[segment.id] = segment;
+    });
+
+    if (Array.isArray(segmentOrder)) {
+      segmentOrder.forEach(function(segmentId) {
+        segmentId = typeof segmentId === 'string' ? segmentId.trim() : '';
+        if (!segmentId || !remaining[segmentId]) return;
+        ordered.push(remaining[segmentId]);
+        delete remaining[segmentId];
+      });
+    }
+
+    segments.forEach(function(segment) {
+      if (!remaining[segment.id]) return;
+      ordered.push(segment);
+      delete remaining[segment.id];
+    });
+
+    return ordered;
+  };
+
+  pr.normalizeRouteSegment = function(segment, index, seenIds) {
+    if (!segment || typeof segment !== 'object') return null;
+
+    var normalized = Object.assign({}, segment);
+    normalized.id = pr.normalizeStableRoutePartId(segment.id, 'segment', index, seenIds);
+
+    if (segment.startAnchor && typeof segment.startAnchor === 'object') {
+      normalized.startAnchor = Object.assign({}, segment.startAnchor);
+    }
+    if (segment.endAnchor && typeof segment.endAnchor === 'object') {
+      normalized.endAnchor = Object.assign({}, segment.endAnchor);
+    }
+    if (segment.waypointRange && typeof segment.waypointRange === 'object') {
+      normalized.waypointRange = Object.assign({}, segment.waypointRange);
+    }
+
+    return normalized;
+  };
+
+  pr.normalizeRouteStructure = function(routeData, fallbackStops) {
+    routeData = routeData && typeof routeData === 'object' ? routeData : null;
+
+    var rawStops = routeData && Array.isArray(routeData.stops) ? routeData.stops : fallbackStops;
+    if (!Array.isArray(rawStops)) return null;
+
+    var seenStopIds = {};
+    var stops = rawStops.map(function(stop, index) {
+      return pr.normalizeImportedStop(stop, index, seenStopIds);
+    }).filter(Boolean);
+    if (stops.length !== rawStops.length) return null;
+
+    var hasSegments = !!(routeData && (Array.isArray(routeData.segments) || Array.isArray(routeData.segmentOrder) || typeof routeData.kind === 'string'));
+    if (!hasSegments) return {
+      schemaVersion: pr.LINEAR_ROUTE_SCHEMA_VERSION,
+      kind: pr.ROUTE_KIND_LINEAR,
+      stops: stops,
+      segments: [],
+      segmentOrder: []
+    };
+
+    var seenSegmentIds = {};
+    var segments = Array.isArray(routeData.segments) ? routeData.segments.map(function(segment, index) {
+      return pr.normalizeRouteSegment(segment, index, seenSegmentIds);
+    }).filter(Boolean) : [];
+    var kind = typeof routeData.kind === 'string' ? routeData.kind.trim() : '';
+    if (kind !== pr.ROUTE_KIND_SEGMENTED && kind !== pr.ROUTE_KIND_LINEAR) {
+      kind = segments.length || (Array.isArray(routeData.segmentOrder) && routeData.segmentOrder.length) ? pr.ROUTE_KIND_SEGMENTED : pr.ROUTE_KIND_LINEAR;
+    }
+
+    segments = pr.normalizeRouteSegmentOrder(segments, routeData.segmentOrder);
+
+    return {
+      schemaVersion: pr.SEGMENTED_ROUTE_SCHEMA_VERSION,
+      kind: kind,
+      stops: stops,
+      segments: segments,
+      segmentOrder: segments.map(function(segment) { return segment.id; })
+    };
+  };
+
+  pr.routeStructureStateFromNormalized = function(routeStructure) {
+    if (!routeStructure || routeStructure.schemaVersion !== pr.SEGMENTED_ROUTE_SCHEMA_VERSION) return null;
+    return {
+      kind: routeStructure.kind,
+      segments: routeStructure.segments.slice(),
+      segmentOrder: routeStructure.segmentOrder.slice()
+    };
+  };
+
+  pr.currentRouteStructureData = function() {
+    if (!pr.state.routeStructure) return null;
+
+    var normalized = pr.normalizeRouteStructure({
+      kind: pr.state.routeStructure.kind,
+      stops: pr.state.stops,
+      segments: pr.state.routeStructure.segments,
+      segmentOrder: pr.state.routeStructure.segmentOrder
+    });
+
+    if (!normalized || normalized.schemaVersion !== pr.SEGMENTED_ROUTE_SCHEMA_VERSION) return null;
+
+    return {
+      kind: normalized.kind,
+      segments: normalized.segments,
+      segmentOrder: normalized.segmentOrder
     };
   };
 
@@ -5075,7 +5307,9 @@ button.portal-route-waypoint-name,
   };
 
   pr.routeExportData = function() {
-    return {
+    var stops = pr.serializeRouteStops(pr.state.stops);
+    var routeStructure = pr.currentRouteStructureData ? pr.currentRouteStructureData() : null;
+    var data = {
       format: pr.ROUTE_EXPORT_FORMAT,
       plugin: pr.ID,
       pluginName: pr.NAME,
@@ -5090,21 +5324,22 @@ button.portal-route-waypoint-name,
         bikeSpeedMph: pr.state.settings.bikeSpeedMph,
         walkSpeedMph: pr.state.settings.walkSpeedMph
       },
-      stops: pr.state.stops.map(function(stop) {
-        return {
-          guid: stop.guid || null,
-          type: stop.type || (stop.guid ? 'portal' : 'map'),
-          title: stop.title || ((stop.type || (stop.guid ? 'portal' : 'map')) === 'map' ? 'Map point' : 'Unnamed portal'),
-          lat: Number(stop.lat),
-          lng: Number(stop.lng),
-          stopMinutes: typeof stop.stopMinutes === 'number' ? stop.stopMinutes : null,
-          startOnMe: !!stop.startOnMe,
-          home: (stop.type || (stop.guid ? 'portal' : 'map')) === 'map' && !!stop.home
-        };
-      }),
+      stops: stops,
       route: pr.state.route || null,
       routeDirty: !!pr.state.routeDirty
     };
+
+    if (routeStructure) {
+      data.routeSchemaVersion = pr.SEGMENTED_ROUTE_SCHEMA_VERSION;
+      data.routeData = {
+        kind: routeStructure.kind,
+        stops: stops,
+        segments: routeStructure.segments,
+        segmentOrder: routeStructure.segmentOrder
+      };
+    }
+
+    return data;
   };
 
   pr.routeExportFilename = function() {
@@ -5135,47 +5370,24 @@ button.portal-route-waypoint-name,
     pr.showMessage('Route JSON exported.');
   };
 
-  pr.normalizeImportedStop = function(stop, index) {
-    if (!stop || typeof stop !== 'object') return null;
-
-    var lat = Number(stop.lat);
-    var lng = Number(stop.lng);
-    if (!isFinite(lat) || !isFinite(lng)) return null;
-
-    var stopMinutes = null;
-    if (stop.stopMinutes !== null && stop.stopMinutes !== undefined && stop.stopMinutes !== '') {
-      stopMinutes = Number(stop.stopMinutes);
-      if (!isFinite(stopMinutes) || stopMinutes < 0) stopMinutes = null;
-      if (stopMinutes !== null) stopMinutes = Math.round(stopMinutes);
-    }
-
-    var guid = pr.stopGuidFromData(stop);
-    var type = stop.type || (guid ? 'portal' : 'map');
-
-    return {
-      guid: guid,
-      type: type,
-      title: pr.hydratedStopTitle(stop, type, index),
-      lat: lat,
-      lng: lng,
-      stopMinutes: stopMinutes,
-      startOnMe: !!stop.startOnMe,
-      home: type === 'map' && !!stop.home,
-      accuracy: typeof stop.accuracy === 'number' ? stop.accuracy : null,
-      updatedAt: stop.updatedAt || null
-    };
-  };
-
   pr.importRouteData = function(data) {
     if (!data || typeof data !== 'object') throw new Error('Import data is not an object.');
-    if (!Array.isArray(data.stops)) throw new Error('Import data does not contain a stops array.');
+    if (!Array.isArray(data.stops) && !(data.routeData && typeof data.routeData === 'object')) {
+      throw new Error('Import data does not contain a stops array.');
+    }
 
-    var stops = data.stops.map(pr.normalizeImportedStop).filter(Boolean);
-    if (stops.length !== data.stops.length) throw new Error('One or more stops are missing valid coordinates.');
+    var routeStructure = null;
+    if (data.routeData && typeof data.routeData === 'object') {
+      routeStructure = pr.normalizeRouteStructure(data.routeData, data.stops);
+      if (!routeStructure) throw new Error('Import data contains invalid route data.');
+    } else {
+      routeStructure = pr.normalizeRouteStructure(null, data.stops);
+    }
 
     if (pr.pushUndoSnapshot) pr.pushUndoSnapshot('import route');
 
-    pr.state.stops = stops;
+    pr.state.stops = routeStructure.stops;
+    pr.state.routeStructure = pr.routeStructureStateFromNormalized(routeStructure);
     pr.state.settings = pr.normalizeSettings(Object.assign({}, pr.state.settings, data.settings || {}));
     pr.state.route = data.route && Array.isArray(data.route.legs) ? data.route : null;
     if (pr.state.route && pr.refreshRouteTravelEstimates) pr.refreshRouteTravelEstimates(pr.state.route);
@@ -5317,8 +5529,6 @@ button.portal-route-waypoint-name,
     }
   };
 
-  pr.ROUTE_LIBRARY_SCHEMA_VERSION = 1;
-
   pr.routeLibraryNow = function() {
     return new Date().toISOString();
   };
@@ -5356,19 +5566,38 @@ button.portal-route-waypoint-name,
 
   pr.serializeRouteLibraryStops = function() {
     return pr.state.stops.map(function(stop) {
-      return {
-        guid: stop.guid || null,
-        type: stop.type || (stop.guid ? 'portal' : 'map'),
-        title: stop.title || ((stop.type || (stop.guid ? 'portal' : 'map')) === 'map' ? 'Map point' : 'Unnamed portal'),
-        lat: Number(stop.lat),
-        lng: Number(stop.lng),
-        stopMinutes: typeof stop.stopMinutes === 'number' ? stop.stopMinutes : null,
-        startOnMe: !!stop.startOnMe,
-        home: (stop.type || (stop.guid ? 'portal' : 'map')) === 'map' && !!stop.home,
-        accuracy: typeof stop.accuracy === 'number' ? stop.accuracy : null,
-        updatedAt: stop.updatedAt || null
-      };
+      return pr.serializeLinearRouteStop(stop);
     });
+  };
+
+  pr.serializeLinearRouteStop = function(stop) {
+    return {
+      guid: stop.guid || null,
+      type: stop.type || (stop.guid ? 'portal' : 'map'),
+      title: stop.title || ((stop.type || (stop.guid ? 'portal' : 'map')) === 'map' ? 'Map point' : 'Unnamed portal'),
+      lat: Number(stop.lat),
+      lng: Number(stop.lng),
+      stopMinutes: typeof stop.stopMinutes === 'number' ? stop.stopMinutes : null,
+      startOnMe: !!stop.startOnMe,
+      home: (stop.type || (stop.guid ? 'portal' : 'map')) === 'map' && !!stop.home,
+      accuracy: typeof stop.accuracy === 'number' ? stop.accuracy : null,
+      updatedAt: stop.updatedAt || null
+    };
+  };
+
+  pr.routeLibrarySchemaVersionForRoutes = function(routes) {
+    var hasSegmentedRoutes = Array.isArray(routes) && routes.some(function(route) {
+      return route && route.schemaVersion === pr.SEGMENTED_ROUTE_SCHEMA_VERSION;
+    });
+    return hasSegmentedRoutes ? pr.SEGMENTED_ROUTE_SCHEMA_VERSION : pr.LINEAR_ROUTE_SCHEMA_VERSION;
+  };
+
+  pr.supportedRouteLibrarySchemaVersion = function(value) {
+    return value === pr.LINEAR_ROUTE_SCHEMA_VERSION || value === pr.SEGMENTED_ROUTE_SCHEMA_VERSION;
+  };
+
+  pr.supportedRouteRecordSchemaVersion = function(value) {
+    return value === pr.LINEAR_ROUTE_SCHEMA_VERSION || value === pr.SEGMENTED_ROUTE_SCHEMA_VERSION;
   };
 
   pr.suggestRouteName = function() {
@@ -5382,25 +5611,32 @@ button.portal-route-waypoint-name,
   pr.makeRouteRecord = function(existing, name) {
     var now = pr.routeLibraryNow();
     var record = existing && typeof existing === 'object' ? existing : {};
+    var routeStructure = pr.currentRouteStructureData ? pr.currentRouteStructureData() : null;
+    var routeData = routeStructure ? {
+      kind: routeStructure.kind,
+      stops: pr.serializeRouteStops(pr.state.stops),
+      segments: routeStructure.segments,
+      segmentOrder: routeStructure.segmentOrder
+    } : {
+      stops: pr.serializeRouteLibraryStops()
+    };
 
     return {
-      schemaVersion: pr.ROUTE_LIBRARY_SCHEMA_VERSION,
+      schemaVersion: routeStructure ? pr.SEGMENTED_ROUTE_SCHEMA_VERSION : pr.LINEAR_ROUTE_SCHEMA_VERSION,
       pluginVersion: pr.VERSION,
       id: record.id || pr.newRouteLibraryId(),
       name: name || record.name || pr.suggestRouteName(),
       createdAt: record.createdAt || now,
       updatedAt: now,
       map: pr.getMapSnapshot(),
-      route: {
-        stops: pr.serializeRouteLibraryStops()
-      },
+      route: routeData,
       settings: pr.routeLibrarySettings()
     };
   };
 
   pr.emptyRouteLibrary = function() {
     return {
-      schemaVersion: pr.ROUTE_LIBRARY_SCHEMA_VERSION,
+      schemaVersion: pr.LINEAR_ROUTE_SCHEMA_VERSION,
       plugin: pr.ID,
       pluginVersion: pr.VERSION,
       updatedAt: pr.routeLibraryNow(),
@@ -5414,7 +5650,7 @@ button.portal-route-waypoint-name,
     }
 
     var normalized = {
-      schemaVersion: library.schemaVersion || pr.ROUTE_LIBRARY_SCHEMA_VERSION,
+      schemaVersion: pr.LINEAR_ROUTE_SCHEMA_VERSION,
       plugin: library.plugin || pr.ID,
       pluginVersion: library.pluginVersion || pr.VERSION,
       updatedAt: library.updatedAt || null,
@@ -5428,6 +5664,7 @@ button.portal-route-waypoint-name,
       if (record) normalized.routes.push(record);
     });
 
+    normalized.schemaVersion = pr.routeLibrarySchemaVersionForRoutes(normalized.routes);
     if (!normalized.updatedAt) normalized.updatedAt = pr.routeLibraryNow();
     return normalized;
   };
@@ -5461,13 +5698,23 @@ button.portal-route-waypoint-name,
   pr.normalizeRouteRecord = function(record, options) {
     options = options || {};
     if (!record || typeof record !== 'object') return null;
-    if (record.schemaVersion !== pr.ROUTE_LIBRARY_SCHEMA_VERSION) return null;
+
+    var schemaVersion = Number(record.schemaVersion);
+    if (!pr.supportedRouteRecordSchemaVersion(schemaVersion)) return null;
 
     var route = record.route || {};
-    if (!Array.isArray(route.stops)) return null;
+    var routeData = null;
 
-    var stops = route.stops.map(pr.normalizeImportedStop).filter(Boolean);
-    if (stops.length !== route.stops.length) return null;
+    if (schemaVersion === pr.SEGMENTED_ROUTE_SCHEMA_VERSION) {
+      routeData = pr.normalizeRouteStructure(Object.assign({
+        kind: route.kind || (Array.isArray(route.segments) || Array.isArray(route.segmentOrder) ? pr.ROUTE_KIND_SEGMENTED : pr.ROUTE_KIND_LINEAR)
+      }, route));
+      if (!routeData || routeData.schemaVersion !== pr.SEGMENTED_ROUTE_SCHEMA_VERSION) return null;
+    } else {
+      if (!Array.isArray(route.stops)) return null;
+      routeData = pr.normalizeRouteStructure(null, route.stops);
+      if (!routeData) return null;
+    }
 
     var now = pr.routeLibraryNow();
     var id = options.newId ? pr.newRouteLibraryId() : (record.id || pr.newRouteLibraryId());
@@ -5475,15 +5722,20 @@ button.portal-route-waypoint-name,
     if (options.nameSuffix) name += ' ' + options.nameSuffix;
 
     return {
-      schemaVersion: pr.ROUTE_LIBRARY_SCHEMA_VERSION,
+      schemaVersion: schemaVersion,
       pluginVersion: record.pluginVersion || pr.VERSION,
       id: id,
       name: name,
       createdAt: options.newId ? now : (record.createdAt || now),
       updatedAt: options.keepUpdatedAt ? (record.updatedAt || now) : now,
       map: record.map && typeof record.map === 'object' ? record.map : null,
-      route: {
-        stops: stops
+      route: schemaVersion === pr.SEGMENTED_ROUTE_SCHEMA_VERSION ? {
+        kind: routeData.kind,
+        stops: pr.serializeRouteStops(routeData.stops),
+        segments: routeData.segments,
+        segmentOrder: routeData.segmentOrder
+      } : {
+        stops: routeData.stops.map(pr.serializeLinearRouteStop)
       },
       settings: record.settings && typeof record.settings === 'object' ? record.settings : {}
     };
@@ -5801,31 +6053,33 @@ button.portal-route-waypoint-name,
   };
 
   pr.applyRouteRecord = function(record) {
-    if (!record || record.schemaVersion !== pr.ROUTE_LIBRARY_SCHEMA_VERSION) {
+    var normalizedRecord = pr.normalizeRouteRecord(record, {
+      keepUpdatedAt: true
+    });
+
+    if (!normalizedRecord) {
       pr.showMessage('Saved route is not compatible.');
       return false;
     }
 
-    var route = record.route || {};
-    if (!Array.isArray(route.stops)) {
-      pr.showMessage('Saved route has no stops.');
-      return false;
-    }
-
-    var stops = route.stops.map(pr.normalizeImportedStop).filter(Boolean);
-    if (stops.length !== route.stops.length) {
+    var route = normalizedRecord.route || {};
+    var routeStructure = normalizedRecord.schemaVersion === pr.SEGMENTED_ROUTE_SCHEMA_VERSION ?
+      pr.normalizeRouteStructure(route) :
+      pr.normalizeRouteStructure(null, route.stops);
+    if (!routeStructure || !Array.isArray(routeStructure.stops)) {
       pr.showMessage('Saved route has invalid stops.');
       return false;
     }
 
     if (pr.pushUndoSnapshot) pr.pushUndoSnapshot('load route');
 
-    pr.state.stops = stops;
-    pr.applyRouteLibrarySettings(record.settings);
+    pr.state.stops = routeStructure.stops;
+    pr.state.routeStructure = pr.routeStructureStateFromNormalized(routeStructure);
+    pr.applyRouteLibrarySettings(normalizedRecord.settings);
     pr.state.route = null;
-    pr.state.routeDirty = stops.length >= 2;
+    pr.state.routeDirty = routeStructure.stops.length >= 2;
     pr.state.selectedMapPointIndex = null;
-    pr.state.activeRouteId = record.id || null;
+    pr.state.activeRouteId = normalizedRecord.id || null;
 
     pr.saveSettings();
     pr.saveStops();
@@ -5838,11 +6092,11 @@ button.portal-route-waypoint-name,
     pr.queueRouteCalculationIfReady();
     pr.hydrateStopTitles();
 
-    if (record.map && record.map.center && window.map && window.map.setView &&
-        typeof record.map.center.lat === 'number' &&
-        typeof record.map.center.lng === 'number' &&
-        typeof record.map.zoom === 'number') {
-      window.map.setView([record.map.center.lat, record.map.center.lng], record.map.zoom);
+    if (normalizedRecord.map && normalizedRecord.map.center && window.map && window.map.setView &&
+        typeof normalizedRecord.map.center.lat === 'number' &&
+        typeof normalizedRecord.map.center.lng === 'number' &&
+        typeof normalizedRecord.map.zoom === 'number') {
+      window.map.setView([normalizedRecord.map.center.lat, normalizedRecord.map.center.lng], normalizedRecord.map.zoom);
     }
 
     pr.showMessage('Route loaded.');
@@ -5894,7 +6148,7 @@ button.portal-route-waypoint-name,
 
   pr.exportRouteLibraryRoutesJson = function(routes, message) {
     var data = {
-      schemaVersion: pr.ROUTE_LIBRARY_SCHEMA_VERSION,
+      schemaVersion: pr.routeLibrarySchemaVersionForRoutes(routes),
       plugin: pr.ID,
       pluginVersion: pr.VERSION,
       exportedAt: pr.routeLibraryNow(),
@@ -6008,7 +6262,7 @@ button.portal-route-waypoint-name,
 
   pr.importRouteLibraryData = function(data) {
     if (!data || typeof data !== 'object') throw new Error('Import data is not an object.');
-    if (data.schemaVersion !== pr.ROUTE_LIBRARY_SCHEMA_VERSION) throw new Error('Route library version is not compatible.');
+    if (!pr.supportedRouteLibrarySchemaVersion(data.schemaVersion)) throw new Error('Route library version is not compatible.');
     if (!Array.isArray(data.routes)) throw new Error('Import data does not contain routes.');
 
     var storage = pr.routeLibraryStorage();
