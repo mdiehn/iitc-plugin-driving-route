@@ -9,9 +9,11 @@
       if (rawStops) {
         var stops = JSON.parse(rawStops);
         if (Array.isArray(stops)) {
-          pr.state.stops = stops.map(function(stop) {
+          var seenStopIds = {};
+          pr.state.stops = stops.map(function(stop, index) {
             if (!stop) return stop;
             return Object.assign({}, stop, {
+              id: pr.stableRoutePartId(stop.id, 'stop', index, seenStopIds),
               type: stop.type || (stop.guid ? 'portal' : 'map'),
               home: (stop.type || (stop.guid ? 'portal' : 'map')) === 'map' && !!stop.home
             });
@@ -50,6 +52,12 @@
           pr.state.route = route;
           if (pr.refreshRouteTravelEstimates) pr.refreshRouteTravelEstimates(pr.state.route);
         }
+      }
+
+      var rawRouteStructure = localStorage.getItem(pr.STORAGE_KEYS.routeStructure);
+      if (rawRouteStructure) {
+        var routeStructure = pr.normalizeRouteStructure(JSON.parse(rawRouteStructure), pr.state.stops);
+        pr.state.routeStructure = pr.routeStructureStateFromNormalized(routeStructure);
       }
 
       var rawRouteDirty = localStorage.getItem(pr.STORAGE_KEYS.routeDirty);
@@ -95,10 +103,18 @@
     } else {
       localStorage.removeItem(pr.STORAGE_KEYS.route);
     }
+
+    if (pr.currentRouteStructureData && pr.currentRouteStructureData()) {
+      localStorage.setItem(pr.STORAGE_KEYS.routeStructure, JSON.stringify(pr.currentRouteStructureData()));
+    } else {
+      localStorage.removeItem(pr.STORAGE_KEYS.routeStructure);
+    }
+
     localStorage.setItem(pr.STORAGE_KEYS.routeDirty, String(!!pr.state.routeDirty));
   };
 
   pr.clearSavedRoute = function() {
     localStorage.removeItem(pr.STORAGE_KEYS.route);
+    localStorage.removeItem(pr.STORAGE_KEYS.routeStructure);
     localStorage.removeItem(pr.STORAGE_KEYS.routeDirty);
   };

@@ -22,6 +22,7 @@
     return {
       label: label || 'route edit',
       stops: pr.cloneForUndo(pr.state.stops || []),
+      routeStructure: pr.cloneForUndo(pr.state.routeStructure || null),
       settings: pr.routeUndoSettings(),
       route: pr.cloneForUndo(pr.state.route || null),
       routeDirty: !!pr.state.routeDirty,
@@ -34,6 +35,7 @@
   pr.routeEditSnapshotKey = function(snapshot) {
     return JSON.stringify({
       stops: snapshot.stops,
+      routeStructure: snapshot.routeStructure,
       settings: snapshot.settings,
       route: snapshot.route,
       routeDirty: snapshot.routeDirty,
@@ -79,6 +81,7 @@
     pr.state.restoringRouteEdit = true;
     try {
       pr.state.stops = pr.cloneForUndo(snapshot.stops || []);
+      pr.state.routeStructure = pr.cloneForUndo(snapshot.routeStructure || null);
       pr.state.settings = Object.assign({}, pr.state.settings, pr.routeUndoSettings(snapshot.settings));
       pr.state.route = pr.cloneForUndo(snapshot.route || null);
       pr.state.routeDirty = !!snapshot.routeDirty;

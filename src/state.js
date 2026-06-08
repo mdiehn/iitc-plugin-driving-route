@@ -70,6 +70,7 @@
 
   pr.state = {
     stops: [],
+    routeStructure: null,
     route: null,
     routeDirty: false,
     settings: pr.normalizeSettings(),
@@ -92,6 +93,27 @@
     undoStack: [],
     redoStack: [],
     restoringRouteEdit: false
+  };
+
+  pr.stableRoutePartId = function(value, prefix, index, seenIds) {
+    value = typeof value === 'string' ? value.trim() : '';
+    seenIds = seenIds || {};
+
+    if (value && !seenIds[value]) {
+      seenIds[value] = true;
+      return value;
+    }
+
+    var base = prefix + '-' + ((typeof index === 'number' ? index : 0) + 1);
+    var candidate = base;
+    var suffix = 2;
+    while (seenIds[candidate]) {
+      candidate = base + '-' + suffix;
+      suffix += 1;
+    }
+
+    seenIds[candidate] = true;
+    return candidate;
   };
 
   pr.getEffectiveStopMinutes = function(stop) {

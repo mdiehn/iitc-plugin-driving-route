@@ -2,6 +2,11 @@
   pr.NAME = 'Portal Route';
   pr.VERSION = '1.6.0';
   pr.SHOW_VERSION_IN_PANEL = true;
+  pr.LINEAR_ROUTE_SCHEMA_VERSION = 1;
+  pr.SEGMENTED_ROUTE_SCHEMA_VERSION = 2;
+  pr.ROUTE_LIBRARY_SCHEMA_VERSION = pr.SEGMENTED_ROUTE_SCHEMA_VERSION;
+  pr.ROUTE_KIND_LINEAR = 'linear';
+  pr.ROUTE_KIND_SEGMENTED = 'segmented';
 
   pr.DOM_IDS = {
     css: 'iitc-plugin-portal-route-css',
@@ -57,6 +62,7 @@
     panelSize: 'iitc-portal-route-panel-size',
     panelSizeUserSet: 'iitc-portal-route-panel-size-user-set',
     route: 'iitc-portal-route-route',
+    routeStructure: 'iitc-portal-route-route-structure',
     routeDirty: 'iitc-portal-route-route-dirty',
     routeLibrary: 'iitc-portal-route-library',
     routeLibraryDriveCache: 'iitc-portal-route-drive-library-cache',

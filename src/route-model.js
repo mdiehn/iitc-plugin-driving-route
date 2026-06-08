@@ -586,7 +586,14 @@
 
     if (pr.pushUndoSnapshot) pr.pushUndoSnapshot('add waypoint');
 
+    var seenStopIds = {};
+    pr.state.stops.forEach(function(existing, existingIndex) {
+      if (!existing) return;
+      pr.stableRoutePartId(existing.id, 'stop', existingIndex, seenStopIds);
+    });
+
     pr.state.stops.push({
+      id: pr.stableRoutePartId(stop.id, 'stop', pr.state.stops.length, seenStopIds),
       guid: guid,
       type: stopType,
       title: title,
@@ -677,6 +684,7 @@
     if (pr.pushUndoSnapshot) pr.pushUndoSnapshot('move waypoint');
 
     pr.state.stops[index] = Object.assign({}, existing, {
+      id: existing.id || pr.stableRoutePartId(replacement.id, 'stop', index, {}),
       guid: guid,
       type: stopType,
       title: title,
@@ -778,6 +786,7 @@
 
     pr.state.stops = [];
     pr.state.route = null;
+    pr.state.routeStructure = null;
     pr.state.routeDirty = false;
     pr.state.selectedMapPointIndex = null;
     pr.state.activeRouteId = null;
@@ -862,15 +871,18 @@
 
     pr.state.stops = [];
     pr.state.route = null;
+    pr.state.routeStructure = null;
     pr.state.routeDirty = false;
     pr.state.selectedMapPointIndex = null;
     pr.state.activeRouteId = null;
 
+    var seenStopIds = {};
     stops.forEach(function(stop) {
       if (!stop || typeof stop.lat !== 'number' || typeof stop.lng !== 'number') return;
       var guid = pr.stopGuidFromData(stop);
       var stopType = stop.type || (guid ? 'portal' : 'map');
       pr.state.stops.push({
+        id: pr.stableRoutePartId(stop.id, 'stop', pr.state.stops.length, seenStopIds),
         guid: guid,
         type: stopType,
         title: pr.hydratedStopTitle(stop, stopType, pr.state.stops.length),
