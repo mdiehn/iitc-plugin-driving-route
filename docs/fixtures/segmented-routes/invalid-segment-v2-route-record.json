@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 2,
+  "pluginVersion": "1.6.0",
+  "id": "route-fixture-invalid-segment-v2",
+  "name": "Fixture Invalid Segment V2 Route",
+  "createdAt": "2026-06-07T13:00:00.000Z",
+  "updatedAt": "2026-06-07T13:10:00.000Z",
+  "map": {
+    "center": {
+      "lat": 43.6485,
+      "lng": -72.2404
+    },
+    "zoom": 15
+  },
+  "route": {
+    "kind": "segmented",
+    "stops": [
+      {
+        "id": "stop-invalid-a",
+        "guid": "portal-invalid-a",
+        "type": "portal",
+        "title": "North Portal",
+        "lat": 43.6485,
+        "lng": -72.2404,
+        "stopMinutes": 5,
+        "startOnMe": false,
+        "home": false,
+        "accuracy": null,
+        "updatedAt": null
+      },
+      {
+        "id": "stop-invalid-b",
+        "guid": null,
+        "type": "map",
+        "title": "Transfer Point",
+        "lat": 43.6492,
+        "lng": -72.2387,
+        "stopMinutes": 2,
+        "startOnMe": false,
+        "home": false,
+        "accuracy": null,
+        "updatedAt": "2026-06-07T13:03:00.000Z"
+      },
+      {
+        "id": "stop-invalid-c",
+        "guid": "portal-invalid-c",
+        "type": "portal",
+        "title": "South Portal",
+        "lat": 43.6504,
+        "lng": -72.2365,
+        "stopMinutes": 4,
+        "startOnMe": false,
+        "home": false,
+        "accuracy": null,
+        "updatedAt": null
+      }
+    ],
+    "segments": [
+      {
+        "id": "segment-bad-anchor",
+        "type": "external",
+        "label": "External Shuttle",
+        "ownership": "external-tool",
+        "waypointRange": {
+          "startIndex": 2,
+          "endIndex": 1
+        },
+        "startAnchor": {
+          "stopId": "stop-invalid-a"
+        },
+        "endAnchor": {
+          "stopId": "stop-does-not-exist"
+        },
+        "renderPolicy": "preserve-only",
+        "exportPolicy": "omit",
+        "source": {
+          "kind": "external",
+          "name": "fixture-source"
+        },
+        "externalData": {
+          "provider": "fixture-bus",
+          "geometry": "not-trusted"
+        },
+        "customField": {
+          "keepMe": true,
+          "note": "Unknown payload must round-trip untouched."
+        }
+      },
+      {
+        "id": "segment-valid-tail",
+        "type": "route",
+        "label": "Valid Tail",
+        "ownership": "portal-route",
+        "waypointRange": {
+          "startIndex": 1,
+          "endIndex": 2
+        },
+        "startAnchor": {
+          "stopId": "stop-invalid-b"
+        },
+        "endAnchor": {
+          "stopId": "stop-invalid-c"
+        },
+        "renderPolicy": "route",
+        "exportPolicy": "include",
+        "source": {
+          "kind": "internal"
+        }
+      }
+    ],
+    "segmentOrder": [
+      "segment-bad-anchor",
+      "segment-valid-tail"
+    ]
+  },
+  "settings": {
+    "defaultStopMinutes": 5,
+    "includeReturnToStart": false,
+    "routingProvider": "ors",
+    "defaultTravelMode": "bike",
+    "driveSpeedMph": 30,
+    "bikeSpeedMph": 10,
+    "walkSpeedMph": 3
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "pluginVersion": "1.6.0",
+  "id": "route-fixture-simple-v1",
+  "name": "Fixture Simple V1 Route",
+  "createdAt": "2026-06-07T12:00:00.000Z",
+  "updatedAt": "2026-06-07T12:15:00.000Z",
+  "map": {
+    "center": {
+      "lat": 43.6424,
+      "lng": -72.2512
+    },
+    "zoom": 15
+  },
+  "route": {
+    "stops": [
+      {
+        "guid": "portal-a",
+        "type": "portal",
+        "title": "Alpha Portal",
+        "lat": 43.6424,
+        "lng": -72.2512,
+        "stopMinutes": 5,
+        "startOnMe": false,
+        "home": false,
+        "accuracy": null,
+        "updatedAt": null
+      },
+      {
+        "guid": null,
+        "type": "map",
+        "title": "River Turn",
+        "lat": 43.6442,
+        "lng": -72.2479,
+        "stopMinutes": 3,
+        "startOnMe": false,
+        "home": false,
+        "accuracy": null,
+        "updatedAt": "2026-06-07T12:04:00.000Z"
+      },
+      {
+        "guid": "portal-c",
+        "type": "portal",
+        "title": "Gamma Portal",
+        "lat": 43.6461,
+        "lng": -72.2443,
+        "stopMinutes": 7,
+        "startOnMe": false,
+        "home": false,
+        "accuracy": null,
+        "updatedAt": null
+      }
+    ]
+  },
+  "settings": {
+    "defaultStopMinutes": 5,
+    "includeReturnToStart": false,
+    "routingProvider": "google",
+    "defaultTravelMode": "drive",
+    "driveSpeedMph": 30,
+    "bikeSpeedMph": 10,
+    "walkSpeedMph": 3
+  }
+}

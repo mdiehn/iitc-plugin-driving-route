@@ -1,0 +1,204 @@
+{
+  "format": "portal-route.v1",
+  "plugin": "portal-route",
+  "pluginName": "Portal Route",
+  "pluginVersion": "1.6.0",
+  "exportedAt": "2026-06-07T13:45:00.000Z",
+  "settings": {
+    "defaultStopMinutes": 5,
+    "includeReturnToStart": false,
+    "routingProvider": "google",
+    "defaultTravelMode": "walk",
+    "driveSpeedMph": 30,
+    "bikeSpeedMph": 10,
+    "walkSpeedMph": 3
+  },
+  "stops": [
+    {
+      "id": "stop-home",
+      "guid": null,
+      "type": "map",
+      "title": "Home",
+      "lat": 43.6424,
+      "lng": -72.2512,
+      "stopMinutes": 0,
+      "startOnMe": false,
+      "home": true,
+      "accuracy": null,
+      "updatedAt": null
+    },
+    {
+      "id": "stop-alpha",
+      "guid": "portal-alpha",
+      "type": "portal",
+      "title": "Alpha Portal",
+      "lat": 43.6433,
+      "lng": -72.2497,
+      "stopMinutes": 5,
+      "startOnMe": false,
+      "home": false,
+      "accuracy": null,
+      "updatedAt": null
+    },
+    {
+      "id": "stop-connector",
+      "guid": null,
+      "type": "map",
+      "title": "Connector Turn",
+      "lat": 43.6446,
+      "lng": -72.2475,
+      "stopMinutes": 1,
+      "startOnMe": false,
+      "home": false,
+      "accuracy": null,
+      "updatedAt": "2026-06-07T12:34:00.000Z"
+    },
+    {
+      "id": "stop-beta",
+      "guid": "portal-beta",
+      "type": "portal",
+      "title": "Beta Portal",
+      "lat": 43.6455,
+      "lng": -72.2461,
+      "stopMinutes": 4,
+      "startOnMe": false,
+      "home": false,
+      "accuracy": null,
+      "updatedAt": null
+    },
+    {
+      "id": "stop-gamma",
+      "guid": "portal-gamma",
+      "type": "portal",
+      "title": "Gamma Portal",
+      "lat": 43.6471,
+      "lng": -72.2439,
+      "stopMinutes": 6,
+      "startOnMe": false,
+      "home": false,
+      "accuracy": null,
+      "updatedAt": null
+    }
+  ],
+  "route": null,
+  "routeDirty": true,
+  "routeSchemaVersion": 2,
+  "routeData": {
+    "kind": "segmented",
+    "stops": [
+      {
+        "id": "stop-home",
+        "guid": null,
+        "type": "map",
+        "title": "Home",
+        "lat": 43.6424,
+        "lng": -72.2512,
+        "stopMinutes": 0,
+        "startOnMe": false,
+        "home": true,
+        "accuracy": null,
+        "updatedAt": null
+      },
+      {
+        "id": "stop-alpha",
+        "guid": "portal-alpha",
+        "type": "portal",
+        "title": "Alpha Portal",
+        "lat": 43.6433,
+        "lng": -72.2497,
+        "stopMinutes": 5,
+        "startOnMe": false,
+        "home": false,
+        "accuracy": null,
+        "updatedAt": null
+      },
+      {
+        "id": "stop-connector",
+        "guid": null,
+        "type": "map",
+        "title": "Connector Turn",
+        "lat": 43.6446,
+        "lng": -72.2475,
+        "stopMinutes": 1,
+        "startOnMe": false,
+        "home": false,
+        "accuracy": null,
+        "updatedAt": "2026-06-07T12:34:00.000Z"
+      },
+      {
+        "id": "stop-beta",
+        "guid": "portal-beta",
+        "type": "portal",
+        "title": "Beta Portal",
+        "lat": 43.6455,
+        "lng": -72.2461,
+        "stopMinutes": 4,
+        "startOnMe": false,
+        "home": false,
+        "accuracy": null,
+        "updatedAt": null
+      },
+      {
+        "id": "stop-gamma",
+        "guid": "portal-gamma",
+        "type": "portal",
+        "title": "Gamma Portal",
+        "lat": 43.6471,
+        "lng": -72.2439,
+        "stopMinutes": 6,
+        "startOnMe": false,
+        "home": false,
+        "accuracy": null,
+        "updatedAt": null
+      }
+    ],
+    "segments": [
+      {
+        "id": "segment-downtown",
+        "type": "route",
+        "label": "Downtown",
+        "ownership": "portal-route",
+        "waypointRange": {
+          "startIndex": 0,
+          "endIndex": 2
+        },
+        "startAnchor": {
+          "stopId": "stop-home"
+        },
+        "endAnchor": {
+          "stopId": "stop-connector"
+        },
+        "renderPolicy": "route",
+        "exportPolicy": "include",
+        "source": {
+          "kind": "internal"
+        }
+      },
+      {
+        "id": "segment-river",
+        "type": "route",
+        "label": "River Walk",
+        "ownership": "portal-route",
+        "waypointRange": {
+          "startIndex": 2,
+          "endIndex": 4
+        },
+        "startAnchor": {
+          "stopId": "stop-connector"
+        },
+        "endAnchor": {
+          "stopId": "stop-gamma"
+        },
+        "renderPolicy": "route",
+        "exportPolicy": "include",
+        "source": {
+          "kind": "internal"
+        }
+      }
+    ],
+    "segmentOrder": [
+      "segment-downtown",
+      "segment-river"
+    ]
+  }
+}

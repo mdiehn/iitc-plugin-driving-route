@@ -4,8 +4,8 @@ Manual-first testing plan for Portal Route segmented-route foundation work.
 
 ## Purpose and scope
 
-This plan defines pre-implementation validation for segmented-route foundation
-work.
+This plan defines concrete validation for the current segmented-route
+foundation slice.
 
 It is meant to protect current linear route behavior while defining what must be
 checked for additive segmented support in storage, display, plotting, export,
@@ -41,9 +41,13 @@ Current repo test automation is minimal:
 - `npm test` only runs those two commands
 
 There is no existing behavioral test harness, browser UI harness, parser test
-suite, or fixture directory for saved-route records. For now, segmented-route
-foundation validation is primarily a manual IITC/browser exercise, with future
-fixture suggestions documented below.
+suite, or test runner for saved-route records. Validation is still primarily a
+manual IITC/browser exercise.
+
+Concrete validation assets added in this repo:
+
+- fixture files under `docs/fixtures/segmented-routes/`
+- manual step-by-step checks in `docs/segmented-routes-manual-checks.md`
 
 ## Segmented-route coverage matrix
 
@@ -70,6 +74,25 @@ fixture suggestions documented below.
 | Older-build degradation | Older Portal Route builds can still use the flat stop sequence when segmented metadata is ignored | Future compatibility fixture checks |
 | Partial-support degradation | Unsupported or partially supported segment data remains stored and visible enough to avoid silent loss | Manual load/save/export checks |
 | Invalid or partial segmented data | Missing anchors, unknown types, malformed payloads, or impossible flattening do not silently drop raw segment data | Manual negative cases now; future parser tests |
+
+## Validation assets
+
+Fixture directory:
+
+- `docs/fixtures/segmented-routes/simple-v1-route-record.json`
+- `docs/fixtures/segmented-routes/segmented-v2-route-record.json`
+- `docs/fixtures/segmented-routes/invalid-segment-v2-route-record.json`
+- `docs/fixtures/segmented-routes/mixed-library.json`
+- `docs/fixtures/segmented-routes/segmented-v2-current-route.json`
+
+Manual checklist doc:
+
+- `docs/segmented-routes-manual-checks.md`
+
+These assets cover the current repo's two relevant JSON surfaces:
+
+- saved-route and route-library records imported through the library UI
+- current-route JSON imported through the route export/import UI
 
 ## Manual regression checklist for current features
 
@@ -208,27 +231,32 @@ foundation work.
   should surface as partial plotting/export support rather than destructive data
   loss.
 
-## Suggested future fixtures
+## Concrete checks covered now
 
-These are recommended fixture shapes for a future parser, serializer, or
-round-trip harness. They are not part of the current repo yet.
+The manual checklist and fixture set now give concrete coverage for:
 
-- Linear `schemaVersion: 1` baseline route.
-- Linear route upgraded with stable stop IDs but no segmented structure.
-- Happy-path segmented `schemaVersion: 2` route with flat `route.stops`,
-  `route.segments`, and `route.segmentOrder`.
-- Segmented route with `connector` and `transfer` segments.
-- Segmented route with `external` or unknown segment payload that must
-  round-trip untouched.
-- Malformed or partial segmented route records covering missing anchors, bad
-  ranges, duplicate IDs, and unsupported segment types.
-- Mixed whole-library fixture containing both linear and segmented routes.
-- Long-route export fixture covering staged Google/Apple export behavior.
+- v1 simple route compatibility
+- v2 segmented route preservation
+- route-schema normalization entry points used by saved-route and current-route
+  import
+- current-route JSON import/export round trips
+- saved-route and whole-library save/load round trips
+- invalid-segment preservation
+- unknown/custom segment field preservation
+- flat-stop fallback for Google Maps, Apple Maps, and print
+- undo, redo, localStorage `routeStructure`, and reload persistence checks
+- mixed local and Google Drive library round trips
+
+Still future work if the repo ever gains a harness:
+
+- parser-level normalization assertions
+- storage mock tests
+- UI rendering tests
+- provider-specific plotting regression automation
 
 ## Harness gaps
 
-- No automated behavioral test framework exists in the repo today.
-- No existing test directory or saved-route fixture set exists.
+- No automated behavioral test framework, directory, or test runner exists.
 - `npm test` is build plus syntax validation, not feature verification.
 - No parser/serializer harness exists for schema normalization or round-trip
   preservation.
@@ -244,12 +272,15 @@ should be true:
 
 - current linear-route manual regression checks pass
 - segmented route JSON/library round-trip behavior is manually verified
+- segmented current-route import/export is manually verified
 - segmented Route List display is manually verified for both linear and
   segmented routes
 - degraded plotting behavior is manually verified for at least one non-route or
   unknown segment case
 - staged Google/Apple export behavior is manually verified for both normal long
   routes and at least one segmented degradation case
+- undo/redo and localStorage `routeStructure` restoration are manually verified
+- mixed-library local and Drive round-trip behavior is manually verified
 - invalid or partial segmented-route data is exercised manually and confirmed to
   preserve raw segment data without silent loss
 

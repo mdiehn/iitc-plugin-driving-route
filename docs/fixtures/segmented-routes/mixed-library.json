@@ -1,0 +1,339 @@
+{
+  "schemaVersion": 2,
+  "plugin": "portal-route",
+  "pluginVersion": "1.6.0",
+  "exportedAt": "2026-06-07T13:30:00.000Z",
+  "routes": [
+    {
+      "schemaVersion": 1,
+      "pluginVersion": "1.6.0",
+      "id": "route-fixture-simple-v1",
+      "name": "Fixture Simple V1 Route",
+      "createdAt": "2026-06-07T12:00:00.000Z",
+      "updatedAt": "2026-06-07T12:15:00.000Z",
+      "map": {
+        "center": {
+          "lat": 43.6424,
+          "lng": -72.2512
+        },
+        "zoom": 15
+      },
+      "route": {
+        "stops": [
+          {
+            "guid": "portal-a",
+            "type": "portal",
+            "title": "Alpha Portal",
+            "lat": 43.6424,
+            "lng": -72.2512,
+            "stopMinutes": 5,
+            "startOnMe": false,
+            "home": false,
+            "accuracy": null,
+            "updatedAt": null
+          },
+          {
+            "guid": null,
+            "type": "map",
+            "title": "River Turn",
+            "lat": 43.6442,
+            "lng": -72.2479,
+            "stopMinutes": 3,
+            "startOnMe": false,
+            "home": false,
+            "accuracy": null,
+            "updatedAt": "2026-06-07T12:04:00.000Z"
+          },
+          {
+            "guid": "portal-c",
+            "type": "portal",
+            "title": "Gamma Portal",
+            "lat": 43.6461,
+            "lng": -72.2443,
+            "stopMinutes": 7,
+            "startOnMe": false,
+            "home": false,
+            "accuracy": null,
+            "updatedAt": null
+          }
+        ]
+      },
+      "settings": {
+        "defaultStopMinutes": 5,
+        "includeReturnToStart": false,
+        "routingProvider": "google",
+        "defaultTravelMode": "drive",
+        "driveSpeedMph": 30,
+        "bikeSpeedMph": 10,
+        "walkSpeedMph": 3
+      }
+    },
+    {
+      "schemaVersion": 2,
+      "pluginVersion": "1.6.0",
+      "id": "route-fixture-segmented-v2",
+      "name": "Fixture Segmented V2 Route",
+      "createdAt": "2026-06-07T12:30:00.000Z",
+      "updatedAt": "2026-06-07T12:45:00.000Z",
+      "map": {
+        "center": {
+          "lat": 43.6424,
+          "lng": -72.2512
+        },
+        "zoom": 15
+      },
+      "route": {
+        "kind": "segmented",
+        "stops": [
+          {
+            "id": "stop-home",
+            "guid": null,
+            "type": "map",
+            "title": "Home",
+            "lat": 43.6424,
+            "lng": -72.2512,
+            "stopMinutes": 0,
+            "startOnMe": false,
+            "home": true,
+            "accuracy": null,
+            "updatedAt": null
+          },
+          {
+            "id": "stop-alpha",
+            "guid": "portal-alpha",
+            "type": "portal",
+            "title": "Alpha Portal",
+            "lat": 43.6433,
+            "lng": -72.2497,
+            "stopMinutes": 5,
+            "startOnMe": false,
+            "home": false,
+            "accuracy": null,
+            "updatedAt": null
+          },
+          {
+            "id": "stop-connector",
+            "guid": null,
+            "type": "map",
+            "title": "Connector Turn",
+            "lat": 43.6446,
+            "lng": -72.2475,
+            "stopMinutes": 1,
+            "startOnMe": false,
+            "home": false,
+            "accuracy": null,
+            "updatedAt": "2026-06-07T12:34:00.000Z"
+          },
+          {
+            "id": "stop-beta",
+            "guid": "portal-beta",
+            "type": "portal",
+            "title": "Beta Portal",
+            "lat": 43.6455,
+            "lng": -72.2461,
+            "stopMinutes": 4,
+            "startOnMe": false,
+            "home": false,
+            "accuracy": null,
+            "updatedAt": null
+          },
+          {
+            "id": "stop-gamma",
+            "guid": "portal-gamma",
+            "type": "portal",
+            "title": "Gamma Portal",
+            "lat": 43.6471,
+            "lng": -72.2439,
+            "stopMinutes": 6,
+            "startOnMe": false,
+            "home": false,
+            "accuracy": null,
+            "updatedAt": null
+          }
+        ],
+        "segments": [
+          {
+            "id": "segment-downtown",
+            "type": "route",
+            "label": "Downtown",
+            "ownership": "portal-route",
+            "waypointRange": {
+              "startIndex": 0,
+              "endIndex": 2
+            },
+            "startAnchor": {
+              "stopId": "stop-home"
+            },
+            "endAnchor": {
+              "stopId": "stop-connector"
+            },
+            "renderPolicy": "route",
+            "exportPolicy": "include",
+            "source": {
+              "kind": "internal"
+            }
+          },
+          {
+            "id": "segment-river",
+            "type": "route",
+            "label": "River Walk",
+            "ownership": "portal-route",
+            "waypointRange": {
+              "startIndex": 2,
+              "endIndex": 4
+            },
+            "startAnchor": {
+              "stopId": "stop-connector"
+            },
+            "endAnchor": {
+              "stopId": "stop-gamma"
+            },
+            "renderPolicy": "route",
+            "exportPolicy": "include",
+            "source": {
+              "kind": "internal"
+            }
+          }
+        ],
+        "segmentOrder": [
+          "segment-downtown",
+          "segment-river"
+        ]
+      },
+      "settings": {
+        "defaultStopMinutes": 5,
+        "includeReturnToStart": false,
+        "routingProvider": "google",
+        "defaultTravelMode": "walk",
+        "driveSpeedMph": 30,
+        "bikeSpeedMph": 10,
+        "walkSpeedMph": 3
+      }
+    },
+    {
+      "schemaVersion": 2,
+      "pluginVersion": "1.6.0",
+      "id": "route-fixture-invalid-segment-v2",
+      "name": "Fixture Invalid Segment V2 Route",
+      "createdAt": "2026-06-07T13:00:00.000Z",
+      "updatedAt": "2026-06-07T13:10:00.000Z",
+      "map": {
+        "center": {
+          "lat": 43.6485,
+          "lng": -72.2404
+        },
+        "zoom": 15
+      },
+      "route": {
+        "kind": "segmented",
+        "stops": [
+          {
+            "id": "stop-invalid-a",
+            "guid": "portal-invalid-a",
+            "type": "portal",
+            "title": "North Portal",
+            "lat": 43.6485,
+            "lng": -72.2404,
+            "stopMinutes": 5,
+            "startOnMe": false,
+            "home": false,
+            "accuracy": null,
+            "updatedAt": null
+          },
+          {
+            "id": "stop-invalid-b",
+            "guid": null,
+            "type": "map",
+            "title": "Transfer Point",
+            "lat": 43.6492,
+            "lng": -72.2387,
+            "stopMinutes": 2,
+            "startOnMe": false,
+            "home": false,
+            "accuracy": null,
+            "updatedAt": "2026-06-07T13:03:00.000Z"
+          },
+          {
+            "id": "stop-invalid-c",
+            "guid": "portal-invalid-c",
+            "type": "portal",
+            "title": "South Portal",
+            "lat": 43.6504,
+            "lng": -72.2365,
+            "stopMinutes": 4,
+            "startOnMe": false,
+            "home": false,
+            "accuracy": null,
+            "updatedAt": null
+          }
+        ],
+        "segments": [
+          {
+            "id": "segment-bad-anchor",
+            "type": "external",
+            "label": "External Shuttle",
+            "ownership": "external-tool",
+            "waypointRange": {
+              "startIndex": 2,
+              "endIndex": 1
+            },
+            "startAnchor": {
+              "stopId": "stop-invalid-a"
+            },
+            "endAnchor": {
+              "stopId": "stop-does-not-exist"
+            },
+            "renderPolicy": "preserve-only",
+            "exportPolicy": "omit",
+            "source": {
+              "kind": "external",
+              "name": "fixture-source"
+            },
+            "externalData": {
+              "provider": "fixture-bus",
+              "geometry": "not-trusted"
+            },
+            "customField": {
+              "keepMe": true,
+              "note": "Unknown payload must round-trip untouched."
+            }
+          },
+          {
+            "id": "segment-valid-tail",
+            "type": "route",
+            "label": "Valid Tail",
+            "ownership": "portal-route",
+            "waypointRange": {
+              "startIndex": 1,
+              "endIndex": 2
+            },
+            "startAnchor": {
+              "stopId": "stop-invalid-b"
+            },
+            "endAnchor": {
+              "stopId": "stop-invalid-c"
+            },
+            "renderPolicy": "route",
+            "exportPolicy": "include",
+            "source": {
+              "kind": "internal"
+            }
+          }
+        ],
+        "segmentOrder": [
+          "segment-bad-anchor",
+          "segment-valid-tail"
+        ]
+      },
+      "settings": {
+        "defaultStopMinutes": 5,
+        "includeReturnToStart": false,
+        "routingProvider": "ors",
+        "defaultTravelMode": "bike",
+        "driveSpeedMph": 30,
+        "bikeSpeedMph": 10,
+        "walkSpeedMph": 3
+      }
+    }
+  ]
+}
