@@ -17,6 +17,12 @@
     if (shouldAutoReplot) pr.queueAutoReplot();
   };
 
+  pr.clearRouteStructureForStopSequenceChange = function() {
+    if (!pr.state.routeStructure) return false;
+    pr.state.routeStructure = null;
+    return true;
+  };
+
   pr.queueAutoReplot = function() {
     if (!pr.calculateRoute || !window.setTimeout) return;
     if (pr.state.autoReplotTimer) window.clearTimeout(pr.state.autoReplotTimer);
@@ -151,6 +157,7 @@
       pr.state.selectedMapPointIndex = newSelectedIndex >= 0 ? newSelectedIndex : null;
     }
 
+    pr.clearRouteStructureForStopSequenceChange();
     pr.markRouteStale({ clearRoute: true });
     pr.saveStops();
     pr.redrawLabels();
@@ -611,6 +618,7 @@
       if (pr.clearIitcPortalSelection) pr.clearIitcPortalSelection();
     }
 
+    pr.clearRouteStructureForStopSequenceChange();
     pr.markRouteStale({ clearRoute: true });
     pr.saveStops();
     pr.redrawLabels();
@@ -770,6 +778,7 @@
     }
 
     pr.state.stops.splice(index, 1);
+    pr.clearRouteStructureForStopSequenceChange();
     pr.markRouteStale({ clearRoute: true });
     pr.saveStops();
     pr.redrawLabels();
@@ -824,6 +833,7 @@
     pr.state.selectedMapPointIndex = selectedStop ? pr.state.stops.indexOf(selectedStop) : null;
     if (pr.state.selectedMapPointIndex < 0) pr.state.selectedMapPointIndex = null;
 
+    pr.clearRouteStructureForStopSequenceChange();
     pr.markRouteStale({ clearRoute: true });
     pr.saveStops();
     pr.redrawLabels();
@@ -935,6 +945,7 @@
       }
     }
 
+    pr.clearRouteStructureForStopSequenceChange();
     pr.markRouteStale({ clearRoute: true });
     pr.saveStops();
     pr.redrawLabels();

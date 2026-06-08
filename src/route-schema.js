@@ -143,8 +143,18 @@
     };
   };
 
+  pr.routeStructureHasSegmentMetadata = function(routeStructure) {
+    if (!routeStructure || typeof routeStructure !== 'object') return false;
+
+    var kind = typeof routeStructure.kind === 'string' ? routeStructure.kind.trim() : '';
+    return kind === pr.ROUTE_KIND_SEGMENTED ||
+      (Array.isArray(routeStructure.segments) && routeStructure.segments.length > 0) ||
+      (Array.isArray(routeStructure.segmentOrder) && routeStructure.segmentOrder.length > 0);
+  };
+
   pr.routeStructureStateFromNormalized = function(routeStructure) {
     if (!routeStructure || routeStructure.schemaVersion !== pr.SEGMENTED_ROUTE_SCHEMA_VERSION) return null;
+    if (!pr.routeStructureHasSegmentMetadata(routeStructure)) return null;
     return {
       kind: routeStructure.kind,
       segments: routeStructure.segments.slice(),
@@ -163,6 +173,7 @@
     });
 
     if (!normalized || normalized.schemaVersion !== pr.SEGMENTED_ROUTE_SCHEMA_VERSION) return null;
+    if (!pr.routeStructureHasSegmentMetadata(normalized)) return null;
 
     return {
       kind: normalized.kind,
