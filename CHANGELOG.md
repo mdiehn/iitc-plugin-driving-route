@@ -4,6 +4,24 @@ This project is in active development.
 
 Latest release: `1.6.0`
 
+## Unreleased
+
+### Added
+
+- Added segmented-route foundation support for current-route JSON, saved-route records, whole-library JSON, local route-library storage, and Google Drive round trips.
+- Added segmented-route fixture files and manual validation docs under `docs/fixtures/segmented-routes/` and `docs/segmented-routes-manual-checks.md`.
+
+### Changed
+
+- Simple routes remain `schemaVersion: 1`.
+- Routes write `schemaVersion: 2` only when segmented metadata exists.
+- `route.stops` remains the canonical executable waypoint list, while `route.segments` and `route.segmentOrder` remain additive metadata for newer builds.
+- Segmented route support in this slice is storage/import/export foundation only; no segmented route editor or mission/banner workflow is included.
+
+### Fixed
+
+- Clear stale segmented route-structure overlay state when stop-sequence edits change the canonical flat route.
+
 ## 1.6.0 - Released 2026-05-16
 
 ### Added

@@ -1,24 +1,25 @@
 # Segmented Route Testing Plan
 
-Manual-first testing plan for Portal Route segmented-route foundation work.
+Manual-first testing plan for the currently implemented Portal Route
+segmented-route foundation slice.
 
 ## Purpose and scope
 
 This plan defines concrete validation for the current segmented-route
 foundation slice.
 
-It is meant to protect current linear route behavior while defining what must be
-checked for additive segmented support in storage, display, plotting, export,
-and degradation handling.
+It is meant to protect current linear route behavior while checking the additive
+segmented support that now exists in storage, import/export, persistence, and
+degradation handling.
 
-In scope:
+In scope for the implemented slice:
 
 - current simple route regression behavior
 - route library save/load compatibility
 - segmented route storage and round-trip preservation
-- segmented route Route List display
-- segmented route plotting behavior
-- segmented route export behavior
+- current-route JSON import/export preservation
+- localStorage and undo/redo segmented-state preservation
+- flat-stop plotting/export behavior for segmented records
 - route splitting and export-limit behavior
 - unknown and external segment preservation
 - migration and degradation behavior
@@ -28,7 +29,7 @@ Out of scope for this plan:
 
 - full segmented-route editing coverage
 - a new automated test framework
-- production implementation details
+- production implementation details beyond the shipped foundation
 - broad historical regression coverage outside features likely to be touched by
   segmented-route foundation work
 
@@ -48,31 +49,32 @@ Concrete validation assets added in this repo:
 
 - fixture files under `docs/fixtures/segmented-routes/`
 - manual step-by-step checks in `docs/segmented-routes-manual-checks.md`
+- no automated parser/model/UI harness yet
 
 ## Segmented-route coverage matrix
 
 | Area | Expected behavior | Current best verification method |
 | --- | --- | --- |
 | Existing linear route load | `schemaVersion: 1` linear routes still load and behave normally | Manual JSON import/load check |
-| Segmented route load | `schemaVersion: 2` routes load with canonical flat `route.stops`, additive `route.segments`, and any normalized `route.segmentOrder` intact enough for round-trip | Manual JSON import/load check |
-| Stop and segment IDs | Stable stop IDs and segment IDs are preserved; missing IDs are handled conservatively | Future parser/normalization fixture tests |
+| Segmented route load | `schemaVersion: 2` routes load with canonical flat `route.stops`, additive `route.segments`, and normalized `route.segmentOrder` intact enough for round-trip | Manual JSON import/load check |
+| Stop and segment IDs | Stable stop IDs and segment IDs are preserved; missing IDs are handled conservatively | Manual fixture round-trip now; future parser tests |
 | Flat stop compatibility | Canonical `route.stops` order survives load, save, export, print, and degradation paths without silent reorder | Manual round-trip now; future fixture tests |
 | Route kind preservation | Linear routes stay explicitly linear; segmented routes do not silently collapse to flat-only internal state | Manual load/save review; future model tests |
 | Route library save/load | Local route library preserves segmented metadata through save, load, update, delete, and overwrite flows | Manual IITC/browser checks |
-| Single-route JSON export/import | Export/import is lossless for segmented metadata and flat stop compatibility data | Manual round-trip now; future fixture tests |
+| Single-route JSON export/import | Export/import is lossless for segmented metadata and flat-stop compatibility data | Manual round-trip now; future fixture tests |
 | Whole-library JSON export/import | Mixed linear and segmented records survive export/import without dropping segmented payloads | Manual library round-trip check |
 | Drive shared storage | Push/pull preserves segmented records without schema loss | Manual shared-storage checks |
-| Route List display | Segmented routes show segment headers, type markers, and unknown/external markers; linear routes stay uncluttered | Manual UI checks |
-| Plotting `route` segments | Google and ORS beta plotting behavior stays unchanged for normal route sections | Manual map comparison |
+| Route List display | Linear routes stay on the current flat Route List; segmented-only headers/badges are not implemented in this slice | Manual UI checks |
+| Plotting `route` segments | Google and ORS beta plotting behavior stays unchanged because execution still follows flat canonical stops | Manual map comparison |
 | Per-segment mode/provider scope | Segment metadata does not introduce active per-segment `travelMode` or `routingProvider` behavior in the first release | Manual settings/plot review; future model tests |
-| Plotting `connector` / `transfer` segments | Non-route segments degrade visibly and conservatively without pretending to be a normal routed sweep | Manual map comparison |
-| Plotting `external` / unknown segments | Raw segment data survives even when plotting is partial or unavailable; one unsupported segment does not destroy the route | Manual load/plot checks |
-| Summary and totals degradation | Totals remain trustworthy or visibly partial when some segments are not standard route segments | Manual UI checks |
-| Google/Apple export degradation | Map-app export is intentionally lossy, keeps staged export behavior, and warns when segmented meaning is flattened or omitted | Manual export checks |
-| Print degradation | Segmented routes print using the existing flat stop list unless optional labels are later added safely | Manual print check |
+| Plotting `connector` / `transfer` segments | Segment records are preserved, but execution still uses flat canonical stops and does not yet add segment-type-specific map behavior | Manual map comparison |
+| Plotting `external` / unknown segments | Raw segment data survives round-trip even though plotting still follows flat canonical stops | Manual load/plot checks |
+| Summary and totals degradation | Totals remain the existing flat-route totals; no segmented-only summary model is introduced in this slice | Manual UI checks |
+| Google/Apple export degradation | Map-app export is intentionally lossy and keeps staged export behavior, but this slice does not yet add segmented-specific warning copy | Manual export checks |
+| Print degradation | Segmented routes print using the existing flat stop list | Manual print check |
 | Route splitting and export limits | Existing staged link behavior still works for large routes and degraded segmented exports | Manual long-route export checks |
 | Older-build degradation | Older Portal Route builds can still use the flat stop sequence when segmented metadata is ignored | Future compatibility fixture checks |
-| Partial-support degradation | Unsupported or partially supported segment data remains stored and visible enough to avoid silent loss | Manual load/save/export checks |
+| Partial-support degradation | Unsupported or partially supported segment data remains stored without silent loss | Manual load/save/export checks |
 | Invalid or partial segmented data | Missing anchors, unknown types, malformed payloads, or impossible flattening do not silently drop raw segment data | Manual negative cases now; future parser tests |
 
 ## Validation assets
@@ -157,7 +159,7 @@ foundation work.
 - `schemaVersion: 2` is used only for routes that actually use segmented
   structure.
 - Segmented routes preserve `route.kind`, canonical flat `route.stops`,
-  additive `route.segments`, and any normalized `route.segmentOrder`.
+  additive `route.segments`, and normalized `route.segmentOrder`.
 - `route.stops` remains the canonical executable waypoint list.
 - Segmented load paths must not silently reorder or rewrite canonical flat
   stops when degradation is required.
@@ -172,25 +174,26 @@ foundation work.
 - Whole-library JSON export/import preserves mixed linear and segmented records.
 - Google Drive shared storage preserves segmented records without stripping
   unknown or external payloads.
+- Reload persistence and undo/redo preserve segmented metadata when the
+  canonical stop sequence has not changed.
+- Stop-sequence edits clear stale `routeStructure` overlay state instead of
+  forcing it to survive a mismatch.
 
 ### Display
 
-- Linear routes keep the current flat Route List presentation without extra
-  segmented clutter.
-- Segmented routes may show segment headers, labels, or type markers.
-- Unknown or external segments are visibly marked instead of silently hidden.
-- If a segment cannot be expanded fully, the UI should still show a compact
-  placeholder rather than dropping it.
+- Linear routes keep the existing flat Route List presentation.
+- This slice does not add segmented headers, labels, badges, or grouped rows.
+- Unknown or external segment metadata should survive storage round trips even
+  when the Route List stays flat.
 
 ### Plotting
 
-- Normal `route` segments preserve current Google and ORS beta plotting
+- Canonical flat `route.stops` preserve current Google and ORS beta plotting
   behavior.
 - Route-level travel mode and routing provider remain authoritative for the
   first release.
-- `connector` and `transfer` segments degrade conservatively and visibly.
-- `external` or unknown segments use provided geometry if available, otherwise
-  degrade without destroying the route record.
+- `connector`, `transfer`, `external`, and unknown segments are preserved as
+  metadata, but this slice does not add per-type plotting behavior.
 - A plotting failure in one segment must not wipe other segment data or the
   route record itself.
 
@@ -202,14 +205,14 @@ foundation work.
 - Export follows canonical `route.stops` when segment metadata is partial,
   invalid, or ignored.
 - Existing staged export behavior for long routes remains intact.
-- Export must warn when segmented meaning is flattened, reduced to endpoints, or
-  omitted.
+- Export does not yet include segmented-specific warning copy; manual checks
+  should confirm the flat-stop fallback remains executable and unsurprising.
 
 ### Print
 
 - First-release print follows the existing flat-route behavior.
 - Print uses canonical `route.stops`.
-- Segment-aware print grouping is optional and not required for foundation work.
+- Segment-aware print grouping is not part of this implemented slice.
 
 ### Migration and degradation
 
@@ -217,8 +220,8 @@ foundation work.
   stop sequence when segmented metadata is ignored.
 - Newer builds must preserve the canonical flat stop list so older builds have a
   best-effort fallback path.
-- Newer builds with partial support must keep the route loadable, preserve raw
-  segment data, and mark partial behavior visibly when needed.
+- Newer builds with partial support must keep the route loadable and preserve
+  raw segment data.
 - Linear routes must not be auto-converted to segmented routes unless a
   segmented-only feature explicitly requires it.
 
@@ -246,6 +249,8 @@ The manual checklist and fixture set now give concrete coverage for:
 - flat-stop fallback for Google Maps, Apple Maps, and print
 - undo, redo, localStorage `routeStructure`, and reload persistence checks
 - mixed local and Google Drive library round trips
+- schema-version behavior where simple routes stay `1` and segmented routes use
+  `2` only when segment metadata exists
 
 Still future work if the repo ever gains a harness:
 
@@ -253,43 +258,9 @@ Still future work if the repo ever gains a harness:
 - storage mock tests
 - UI rendering tests
 - provider-specific plotting regression automation
+- segmented UI/editor behavior once that work exists
 
 ## Harness gaps
 
 - No automated behavioral test framework, directory, or test runner exists.
 - `npm test` is build plus syntax validation, not feature verification.
-- No parser/serializer harness exists for schema normalization or round-trip
-  preservation.
-- No UI/browser harness exists for Route List rendering, plotting degradation,
-  or export warnings.
-- No storage mock harness exists for route-library merge behavior or Drive
-  shared-storage round-trip checks.
-
-## Release gate for segmented-route foundation work
-
-Before merging segmented-route foundation implementation work, the following
-should be true:
-
-- current linear-route manual regression checks pass
-- segmented route JSON/library round-trip behavior is manually verified
-- segmented current-route import/export is manually verified
-- segmented Route List display is manually verified for both linear and
-  segmented routes
-- degraded plotting behavior is manually verified for at least one non-route or
-  unknown segment case
-- staged Google/Apple export behavior is manually verified for both normal long
-  routes and at least one segmented degradation case
-- undo/redo and localStorage `routeStructure` restoration are manually verified
-- mixed-library local and Drive round-trip behavior is manually verified
-- invalid or partial segmented-route data is exercised manually and confirmed to
-  preserve raw segment data without silent loss
-
-## Recommended next session
-
-Recommended next agent: `implementation`
-
-Recommended next task:
-
-Turn the segmented-route data-model and testing-plan expectations into a small
-file-level implementation plan, then scoped production work, without expanding
-into a full segmented-route editor.

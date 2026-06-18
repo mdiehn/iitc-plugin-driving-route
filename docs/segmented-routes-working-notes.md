@@ -1,6 +1,7 @@
 # Segmented Routes Working Notes
 
-Working notes for the first segmented-route design pass.
+Working notes after the segmented-route foundation implementation and
+fixture-validation slices.
 
 ## Scope guardrails
 
@@ -10,26 +11,7 @@ Working notes for the first segmented-route design pass.
 - Treat external producers as import/export neighbors, not dependencies.
 - Do not require a destructive route-library migration.
 
-## Current-model pressure points
-
-Portal Route currently assumes:
-
-- one active ordered stop array
-- one route-level travel mode
-- one route-level routing provider
-- one route summary and one plotted line
-- export built from one flat list
-
-Segmented routes add pressure in these places:
-
-- storage schema
-- route normalization
-- route list rendering
-- plot/render ownership
-- export degradation rules
-- route-summary trustworthiness
-
-## Foundation decisions captured in this pass
+## Foundation decisions now implemented
 
 - Segmented support is additive, not a replacement for the flat model.
 - Every segmented route keeps a flat ordered stop list for compatibility.
@@ -43,8 +25,27 @@ Segmented routes add pressure in these places:
   lossy for segmented meaning.
 - Per-segment `travelMode` and `routingProvider` behavior is deferred and must
   not affect first-release behavior.
-- Print falls back to the existing flat-route behavior unless optional labels
-  can be added cheaply and safely.
+- Print falls back to the existing flat-route behavior.
+
+## What this branch actually added
+
+- segmented-capable schema normalization for saved-route records and current
+  route JSON
+- stable stop/segment IDs during normalization
+- per-route `schemaVersion` handling where simple routes stay `1` and routes
+  only write `2` when segment metadata exists
+- route-library, current-route JSON, localStorage, undo/redo, and Drive
+  round-trip preservation for additive segmented metadata
+- stale `routeStructure` clearing when canonical stop-sequence edits change the
+  flat route
+
+## What this branch did not add
+
+- a segmented route editor
+- segmented Route List grouping, headers, or badges
+- segment-aware plotting behavior by type
+- segment-aware print layout or export warnings
+- mission or banner features
 
 ## Why keep a flat stop list
 
@@ -57,23 +58,15 @@ properties:
 - the first implementation can be incremental instead of all-or-nothing
 
 The tradeoff is duplicated structure. That is acceptable for the foundation
-because the first release now has a strict rule: `route.stops` is authoritative
-for executable behavior, and segments may annotate it but must not overrule it.
+because the current rule is strict: `route.stops` is authoritative for
+executable behavior, and segments may annotate it but must not overrule it.
 
-## Working assumptions
-
-- Segment order matters and should be explicit.
-- Some segments may not be Portal Route-owned.
-- Some segments may not be routeable by Google or ORS.
-- Not every segment should contribute equally to Google/Apple export.
-- Some segmented routes will only have partial plotting/export support at first.
-
-## Deterministic rules for the first implementation
+## Deterministic rules in the implemented slice
 
 ### Source of truth
 
-- `route.stops` is canonical for plotting fallback, map-app export, simple-route
-  compatibility, and older-build behavior.
+- `route.stops` is canonical for plotting fallback, map-app export,
+  simple-route compatibility, older-build behavior, and print fallback.
 - `route.segments` is a structural overlay that references spans or anchors in
   the canonical stop list.
 - If segment metadata disagrees with `route.stops`, the stop list wins for
@@ -85,10 +78,10 @@ for executable behavior, and segments may annotate it but must not overrule it.
 - `route.segments` array order is the default segment display/export order
 - `segmentOrder`, if present, may be normalized into array order on load/save
 - validated stop anchors outrank cached `waypointRange`
-- `waypointRange` must be treated as a convenience cache, not a stronger source
-  of truth than anchors or flat stop order
-- invalid ranges or anchors make a segment non-executable but preserve it as
-  metadata when possible
+- `waypointRange` is a convenience cache, not a stronger source of truth than
+  anchors or flat stop order
+- invalid ranges or anchors preserve the segment metadata but do not change
+  canonical stop order
 - unknown or external payload is preserved but not trusted for routing
 
 ### Save/load behavior
@@ -97,16 +90,17 @@ for executable behavior, and segments may annotate it but must not overrule it.
 - normalization may add missing stop IDs and segment IDs
 - normalization must not silently reorder canonical stops to satisfy segment
   metadata
-- newer builds should rewrite inconsistent `segmentOrder` into deterministic
-  segment array order before save
+- newer builds rewrite inconsistent `segmentOrder` into deterministic segment
+  array order before save
+- stop-sequence edits clear stale overlay state instead of leaving a mismatched
+  `routeStructure` behind
 
 ### Plotting/export/print fallback
 
-- executable plotting/export follows canonical stops plus validated conservative
-  segment behavior
-- Google/Apple export is intentionally lossy and falls back to flat route
-  behavior when needed
-- print uses the existing flat stop list in the first release
+- executable plotting/export follows canonical flat stops
+- Google/Apple export is intentionally lossy and falls back to the flat route
+  behavior
+- print uses the existing flat stop list
 
 ### Older-build fallback
 
@@ -115,35 +109,11 @@ for executable behavior, and segments may annotate it but must not overrule it.
 - segment labels/types may be lost if an older build rewrites the route
 - compatibility depends on preserving the canonical flat stop list
 
-### Segment payload depth
-
-Open choice:
-
-- anchors only for `connector` and `transfer`
-- anchors plus optional interior stops
-- anchors plus geometry only
-
-Current recommendation:
-
-- allow anchors plus optional interior stops, but do not require rich geometry
-  in the first pass
-
 ### Schema version rollout
 
-Open choice:
-
-- upgrade every saved route to schema `2` on first write
-- only write schema `2` for routes that actually use segments
-
-Current recommendation:
-
-- write schema `2` only for segmented routes in the first release that ships the
-  foundation
-
-Reason:
-
-- less churn in route-library data
-- easier debugging during rollout
+- simple routes remain `schemaVersion: 1`
+- only routes with segmented metadata write `schemaVersion: 2`
+- this keeps route-library churn down and keeps rollout/debugging simpler
 
 ## Degradation priorities
 
@@ -152,52 +122,55 @@ When Portal Route cannot fully honor segmented meaning, preserve in this order:
 1. Route record loads.
 2. Raw segment data survives round-trip.
 3. Flat stop order survives when present.
-4. Plotting degrades visibly.
-5. Export degrades with a warning.
+4. Flat-stop plotting/export stays executable.
 
 What not to do:
 
 - silently drop an external segment
 - silently reorder flattened stops
-- pretend a transfer is a normal routed portal sweep
+- pretend a segmented editor exists when this branch only shipped storage
+  foundation
 
-## First implementation slice
+## Implemented slice summary
 
-Smallest useful slice:
+Completed slice:
 
-1. Add segmented-capable schema parsing and normalization.
-2. Add stop IDs and segment IDs.
-3. Preserve segmented data through JSON/library round-trip.
-4. Add read-only segmented Route List rendering.
-5. Add basic plotting fallback for non-route segments.
-6. Add map-export warnings when flattening omits segment meaning.
+1. Added segmented-capable schema parsing and normalization.
+2. Added stop IDs and segment IDs.
+3. Preserved segmented data through current-route JSON, route-library, Drive,
+   localStorage, and undo/redo round trips.
+4. Kept execution on canonical flat stops and cleared stale overlay state when
+   stop-sequence edits would desynchronize the structure.
 
-This is enough to validate the foundation before building editing tools.
+Deferred slice:
 
-## Risks to watch
+1. Read-only segmented Route List rendering.
+2. Segment-type-specific plotting fallback.
+3. User-facing export warnings for flattened segment meaning.
+
+## Risks to keep watching
 
 - duplicated flat-plus-segment state drifting out of sync
-- unclear route totals when some segments are non-route or external
+- unclear user expectations if JSON preserves segmented structure but the UI
+  stays flat
 - export confusion if Google/Apple output looks simpler than the saved route
-- UI clutter if segmented headers are bolted onto the current Route List without
-  restraint
 - over-scoping into mission/banner features
 
 ## Questions for the next session
 
-- Where should authoritative flattening/validation live: `route-model`,
-  `route-library`, or a new schema helper?
-- Should current-route JSON export format stay `portal-route.v1` with additive
-  fields or move to a new format tag?
-- Do connector/transfer segments need user-visible labels in the first UI slice,
-  or are type badges enough?
+- Does the current fixture/manual coverage catch every blocker-level regression
+  around save/load, reload, and Drive round trips?
+- Should the next segmented UI slice start in the Route List, the library, or a
+  separate read-only detail view?
+- What is the smallest honest user-facing warning copy for flattened map-app
+  export?
 
 ## Recommended next agent/session
 
-Recommended next agent: `implementation`
+Recommended next agent: `gatekeeper`
 
 Recommended session brief:
 
-- turn the data-model decisions into a file-level implementation plan
-- identify the minimum parser/serializer/test surfaces
-- keep UI work read-only and minimal
+- review this branch for merge readiness after the storage foundation and docs
+- call out any remaining manual validation blockers
+- keep future segmented UI/editor scope separate from this completed foundation

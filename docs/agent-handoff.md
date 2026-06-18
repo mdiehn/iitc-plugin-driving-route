@@ -1,22 +1,27 @@
 # Agent Handoff
 
-Current handoff for segmented-route foundation work.
+Current handoff after segmented-route foundation implementation and doc sync.
 
 ## What was done
 
 - Read the current repo guidance, release notes, roadmap, and route/storage/UI
   design docs.
-- Read `docs/testing-plan.md` for segmented-route validation expectations.
-- Read the project-scoped `architect` agent guidance.
+- Read `docs/testing-plan.md` plus the fixture/manual validation docs.
+- Read the project-scoped `docs-keeper` agent guidance.
 - Noted the available project-scoped agent configs under `.codex/agents/*.toml`.
-- Added an initial segmented-route design doc.
-- Added working notes focused on compatibility, degradation, and rollout scope.
+- Synced release-facing and design/testing docs with the implemented storage
+  foundation.
+- Kept future segmented UI/editor work clearly separate from the implemented
+  slice.
 
 ## New docs
 
-- `docs/segmented-routes-design.md`
-- `docs/segmented-routes-working-notes.md`
-- `docs/testing-plan.md` is now part of the required context for follow-on work.
+- `docs/segmented-routes-design.md` now reflects the implemented foundation
+  instead of the earlier proposal-only state.
+- `docs/segmented-routes-working-notes.md` now separates completed foundation
+  work from deferred UI/workflow work.
+- `docs/testing-plan.md` now matches the actual validation slice: fixtures plus
+  manual checks, not a segmented UI harness.
 
 ## Main decisions
 
@@ -25,39 +30,40 @@ Current handoff for segmented-route foundation work.
 - `route.stops` is the canonical executable waypoint list for the first
   implementation.
 - Segment metadata is stored beside flat stops, not instead of them.
-- Suggested saved-route upgrade path is `schemaVersion: 2` for segmented routes.
+- Simple routes remain `schemaVersion: 1`; segmented routes use
+  `schemaVersion: 2` only when segment metadata exists.
 - Unknown and external segments must round-trip safely even without full support.
 - Google/Apple map export is explicitly a flattened degradation path, not the
   lossless representation.
 - Per-segment `travelMode` and `routingProvider` behavior is deferred and must
   not affect first-release behavior.
-- Print degrades to the existing flat-route behavior in the first release unless
-  optional labels are cheap and safe.
+- Print degrades to the existing flat-route behavior in this slice.
+- Stop-sequence edits clear stale segmented overlay state instead of forcing a
+  mismatched structure to survive.
 
 ## Out of scope kept out
 
 - production code
-- segmented editor design beyond read-only structure display
+- segmented editor or grouped Route List UI
 - mission/banner flows
 - Mission/Banner Companion behavior
 - destructive saved-route migration
 
-## Open questions to resolve before coding deeply
+## Remaining gaps to verify manually
 
-- How much interior structure should connector/transfer segments own?
-- Should segmented support write schema `2` only when needed, or for all routes
-  on next save?
-- Should external segments be allowed to carry rendered geometry directly in
-  saved JSON?
-- Do connector/transfer segments need type badges only, or labels too, in the
-  first Route List UI slice?
+- IITC/browser proof for mixed local-library and Drive-library segmented round
+  trips.
+- Browser proof that reload, undo, and stop-sequence edits always clear or
+  preserve `routeStructure` at the right times.
+- Browser proof that flat-stop Google/Apple export and print stay unsurprising
+  for segmented records with invalid or external metadata.
 
 ## Recommended next agent
 
-`implementation`
+`gatekeeper`
 
 ## Recommended next task
 
-Create a small implementation plan that maps the design to concrete parser,
-serializer, display, plotting, and test changes without editing release files or
-expanding into a full segmented-route editor.
+Review the implemented branch for readiness, with focus on docs accuracy,
+manual-validation sufficiency, and whether any blocker-level regressions remain
+before merge.

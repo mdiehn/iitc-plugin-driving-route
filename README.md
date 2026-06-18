@@ -91,6 +91,7 @@ When route data is available, the panels show travel time, wait time, trip time,
 - Saved routes can be renamed, updated from the current route, deleted, exported, and imported.
 - Multiple saved routes can be selected for export or delete.
 - The local route library can be exported or imported as JSON.
+- Simple saved routes stay on the existing flat record shape. Segmented route metadata can round-trip through current-route JSON and saved-route/library JSON when present, but Portal Route does not include a segmented route editor yet.
 
 ### Route Library
 
@@ -241,8 +242,10 @@ package.json
 ## More docs
 
 - [Design overview](docs/design.md)
-- [Phase 1 design](docs/design-phase-1.md)
-- [Usability notes](docs/usability-notes.md)
+- [Route library design](docs/route-library-design.md)
+- [UI model and interaction notes](docs/ui-model-and-interaction-notes.md)
+- [Segmented routes design](docs/segmented-routes-design.md)
+- [Segmented route testing plan](docs/testing-plan.md)
 
 ## Credits
 

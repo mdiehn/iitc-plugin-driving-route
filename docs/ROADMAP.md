@@ -6,6 +6,24 @@ Portal Route is now in a stable feature-building phase. The core workflow is usa
 
 Recent releases have focused on making the plugin more comfortable for real use: better mobile controls, route library improvements, route-provider support, pinned action bars in long panels, Home location support, and more visible route controls in the Route List.
 
+## Unreleased branch work: segmented-route foundation
+
+Current branch status:
+
+- Current-route JSON, saved-route records, whole-library JSON, local persistence, undo/redo, and Drive-backed library flows now preserve segmented-route metadata when it exists.
+- Simple routes remain first-class flat routes on `schemaVersion: 1`.
+- `schemaVersion: 2` is only written when a route actually carries segmented metadata.
+- `route.stops` remains the canonical executable waypoint list.
+- `route.segments` and `route.segmentOrder` are additive structure metadata and do not override canonical stop order.
+- Stop-sequence edits clear stale segmented overlay state instead of trying to keep mismatched segment metadata alive.
+
+Still future:
+
+- a segmented route editor
+- Route List segment headers/badges beyond the existing flat route workflow
+- segment-aware plotting, totals, print grouping, or export warnings beyond flat-stop fallback
+- mission or banner workflows
+
 ## Current state: 1.6.0
 
 ### Route building and editing
@@ -88,6 +106,7 @@ The original post-1.1 roadmap focused heavily on route-library structure and sto
 
 Topics discussed for future work:
 
+- segmented-route UI and workflow beyond the current storage foundation
 - Route Follow Mode
 - bulk portal selection and optimized route building
 - route splitting and export-limit handling
@@ -175,6 +194,23 @@ Possible work:
 - route-list controls that do not make the UI too crowded
 
 This should probably be a focused minor release because it touches route records, UI, summaries, rendering, and export behavior.
+
+## Segmented-route UI and workflow
+
+Current state:
+
+- The additive segmented-route storage foundation exists on this branch.
+- Flat routes still run on canonical `route.stops`.
+- JSON/library/Drive round trips can preserve `route.segments` metadata.
+- Portal Route does not yet provide a segmented route editor or segmented-only route execution behavior.
+
+Future work:
+
+- decide how segmented structure should appear in the Route List without cluttering normal routes
+- add user-facing segmented-route creation and editing flows
+- decide whether segment headers, badges, or a separate read-only structure view is the best first UI
+- add explicit partial-support messaging when segmented meaning is flattened for print or map-app export
+- keep mission/banner-specific flows out of scope unless they become a separately approved project
 
 ## Route line styling by mode
 
